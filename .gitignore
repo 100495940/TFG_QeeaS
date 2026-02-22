@@ -1,0 +1,8 @@
+# Archivos temporales de compilación
+build/
+sdkconfig
+sdkconfig.olg
+
+# Configuración del editor
+.vscode/
+.devcontainer/
