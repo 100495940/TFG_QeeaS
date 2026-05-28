@@ -5,4 +5,7 @@ sdkconfig.olg
 
 # Configuración del editor
 .vscode/
-.devcontainer/
+# .devcontainer/
+
+# Configuración de git
+.git/

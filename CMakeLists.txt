@@ -1,11 +1,14 @@
-# Configuracion del proyecto Espressif
+# Indicamos a ZEPHYR qué archivos compilar dentro
+# de la carpeta main
 
-# Establer versión mínima de CMake requerida
-cmake_minimum_required(VERSION 3.16)
+# Versión mínima de CMake
+cmake_minimum_required(VERSION 3.20.0)
 
-# Incluir lógica principal del framework ESP-IDF
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+# Buscar el sistema operativo ZEPHYR en las carpetas de Docker
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
-# Definir nombre del proyecto
-project(TFG_QeeaS)
+# Nombrar proyecto
+project(tfg_entropy)
 
+# Enlazar archivos a compilar con la app
+target_sources(app PRIVATE main/main.c main/entropy.c)

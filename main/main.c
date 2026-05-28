@@ -6,6 +6,6 @@ void app_main(void) {
 
     // Bucle principal
     while(1) {
-        send_trng_data_task();
+        send_trng_data_ask();
     }
 }

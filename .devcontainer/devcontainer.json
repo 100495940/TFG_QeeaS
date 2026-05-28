@@ -1,0 +1,29 @@
+{
+    "name": "ESP32-C6 Entropy Lab (Zehpyr)",
+    "build": {
+        "dockerfile": "Dockerfile",
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+            "ms-vscode.cpptools",
+            "trond-snekvik.devicetree",
+            "marus25.cortex-debug",
+            "ms-python.python"
+            ]
+        }
+    },
+    "remoteUser": "root",
+    "runArgs": [
+        "--privileged",
+        "--device=/dev/ttyACM0:/dev/ttyACM0",
+        "--device=/dev/ttyUSB0:/dev/ttyUSB0"
+    ],
+    "mounts": [
+        "source=/dev,target=/dev,type=bind"
+    ],
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    "containerEnv": {
+        "ZEPHYR_BASE": "/workspaces/zephyrproject/zephyr"
+    }
+}
