@@ -1,6 +1,6 @@
 #include "entropy.h"
 
-void app_main(void) {
+void main(void) {
     // Configurar el modo de la entropía
     set_radio_entropy(true);
 

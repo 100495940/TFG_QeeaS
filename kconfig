@@ -1,0 +1,18 @@
+menu "Configuración Wi-Fi del TFG"
+
+config WIFI_MI_SSID
+    string "Nombre de la red Wi-Fi (SSID)"
+    default "MI_RED_WIFI"
+    help
+      El nombre de la red a la que se conectara la ESP32-C6.
+
+config WIFI_MI_PASSWORD
+    string "Contraseña de la red Wi-Fi"
+    default "MI_CONTRASENA"
+    help
+      La contraseña WPA2 de la red.
+
+endmenu
+
+# Esta linea es obligatoria para cargar el resto del SO
+source "Kconfig.zephyr"

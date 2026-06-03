@@ -9,3 +9,6 @@ sdkconfig.olg
 
 # Configuración de git
 .git/
+
+# Archivo con las contraseñas y secretos
+secrets.conf

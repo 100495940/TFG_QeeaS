@@ -1,6 +1,9 @@
 #!/bin/bash
 # Este script se ejecutará automáticamente tras crear el contenedor
 
+echo "=== Configurando dependencias de Python ==="
+pip install -r requirements.txt
+
 echo "=== Configurando el entorno de Zephyr (Automáticamente) ==="
 
 cd /workspaces

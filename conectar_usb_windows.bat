@@ -46,9 +46,35 @@ if not defined BUSID (
 
 echo [INFO] Placa detectada en el puerto USB con BUSID: !BUSID!
 
+:: ==========================================
+:: PERMISOS DE RED (FIREWALL) AUTOMATIZADOS
+:: ==========================================
+echo [INFO] Comprobando reglas de red interna (Firewall WSL)...
+netsh advfirewall firewall show rule name="usbipd Bind Port" >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ALERTA] Es la primera vez que se ejecuta. Se necesita abrir el puerto 3240.
+    echo [ALERTA] Por favor, ACEPTA la ventana de Administrador emergente.
+    powershell -Command "Start-Process netsh -ArgumentList 'advfirewall firewall add rule name=\"usbipd Bind Port\" dir=in action=allow protocol=TCP localport=3240' -Verb RunAs"
+    
+    :: Damos 3 segundos para que Windows aplique la regla de seguridad
+    timeout /t 3 >nul
+    echo [INFO] Regla de Firewall inyectada con exito.
+) else (
+    echo [INFO] Regla de Firewall ya estaba configurada. Todo en orden.
+)
+echo.
+
 :: Vincular e inyectar el hardware al contenedor
 echo [2/3] Conectando hardware a la maquina virtual de Docker
+
+:: Forzar vinculación previa por si alguna conexión se ha quedado colgada
+usbipd detach --busid !BUSID! >nul 2>nul
+timeout /t 2 >nul
+
+:: Vincular puerto de nuevo
 usbipd bind --busid !BUSID! >nul 2>nul
+
+:: Inyectar la placa en WSL 
 usbipd attach --wsl --busid !BUSID!
 if %errorlevel% neq 0 (
     echo [ERROR] Fallo al intentar pasar el USB a Docker. ¿Esta Docker Desktop abierto?
@@ -58,7 +84,7 @@ if %errorlevel% neq 0 (
 
 :: Abrir el entorno
 echo [3/3] Abriendo Visual Studio Code
-code .
+:: code .
 
 echo.
 echo ===================================================
