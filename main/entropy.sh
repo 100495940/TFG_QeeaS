@@ -18,12 +18,16 @@ echo "[INFO] Configuración seleccionada: $NOMBRE_MODO"
 echo ""
 
 # Compilar
+BLOBS_DIR="/workspaces/zephyrproject/modules/hal/espressif/zephyr/blobs"
 echo "[1/4] Verificando dependencias de hardware Wi-Fi"
-west blobs fetch hal_espressif > /dev/null 2>&1
+if [ ! -d "$BLOBS_DIR" ]; then
+    west blobs fetch hal_espressif > /dev/null 2>&1
+fi
 
 echo "[2/4] Limpiando caché antigua y compilando el firmware"
 rm -rf build/
-west build -p always -b esp32c6_devkitc/esp32c6/hpcore $ESTRA_ARGS
+west build -p always -b esp32c6_devkitc/esp32c6/hpcore $EXTRA_ARGS
+#west build -p auto -b esp32c6_devkitc/esp32c6/hpcore $EXTRA_ARGS
 
 if [ $? -ne 0 ]; then
     echo "Error la compilación ha fallado"
@@ -62,7 +66,7 @@ if [ "$MODO_NIST" = true ]; then
 else
     echo "[INFO] Entrando en modo Monitor Serie automáticamente."
     echo "[INFO] Para salir del monitor pulsa: Ctrl + X"
-    echo "--------------------------------------------- "
+    echo "---------------------------------------------"
     # Añadir argumento --exit-char 24 para poder salir del monitor
     python3 -m serial.tools.miniterm --exit-char 24 /dev/ttyUSB0 115200
 fi

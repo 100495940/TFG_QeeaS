@@ -14,5 +14,12 @@ config WIFI_MI_PASSWORD
 
 endmenu
 
+config ENTROPY_RAW_MODE
+    bool "Modo binario crudo para tests del NIST"
+    default n
+    help
+      Si se activa (y), la placa enviará datos binarios puros
+      Si se desactiva (n), enviara texto en formato DEBUG
+
 # Esta linea es obligatoria para cargar el resto del SO
 source "Kconfig.zephyr"
