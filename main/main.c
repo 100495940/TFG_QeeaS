@@ -1,6 +1,10 @@
 #include "entropy.h"
+#include "wifi.h"
 
 void main(void) {
+    // Conectar a Internet
+    conectar_wifi();
+    
     // Configurar el modo de la entropía
     set_radio_entropy(true);
 

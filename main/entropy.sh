@@ -14,6 +14,10 @@ if [ "$1" == "--nist" ]; then
     NOMBRE_MODO="NIST (Binario crudo a alta velocidad)"
 fi
 
+if [ -f "secrets.conf" ]; then
+    EXTRA_ARGS="$EXTRA_ARGS -DOVERLAY_CONFIG=secrets.conf"
+fi
+
 echo "[INFO] Configuración seleccionada: $NOMBRE_MODO"
 echo ""
 
@@ -26,8 +30,8 @@ fi
 
 echo "[2/4] Limpiando caché antigua y compilando el firmware"
 rm -rf build/
-west build -p always -b esp32c6_devkitc/esp32c6/hpcore $EXTRA_ARGS
-#west build -p auto -b esp32c6_devkitc/esp32c6/hpcore $EXTRA_ARGS
+west build -p always -b esp32c6_devkitc/esp32c6/hpcore . -- $EXTRA_ARGS
+#west build -p auto -b esp32c6_devkitc/esp32c6/hpcore . -- $EXTRA_ARGS
 
 if [ $? -ne 0 ]; then
     echo "Error la compilación ha fallado"

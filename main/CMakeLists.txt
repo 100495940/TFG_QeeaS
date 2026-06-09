@@ -11,4 +11,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(tfg_entropy)
 
 # Enlazar archivos a compilar con la app
-target_sources(app PRIVATE main/main.c main/entropy.c)
+target_sources(app PRIVATE 
+    main/main.c 
+    main/entropy.c
+    main/wifi.c
+)
