@@ -16,7 +16,7 @@ static struct net_mgmt_event_callback ipv4_cb;
 
 // Función que salta cuando reciba las alarmas
 static void gestor_eventos_red(struct net_mgmt_event_callback *cb, 
-    uint32_t mgmt_event, 
+    uint64_t mgmt_event, 
     struct net_if *iface) {
     if (mgmt_event == NET_EVENT_WIFI_CONNECT_RESULT) {
         const struct wifi_status *status = (const struct wifi_status *)cb->info;
@@ -29,7 +29,7 @@ static void gestor_eventos_red(struct net_mgmt_event_callback *cb,
         }    
     } else if (mgmt_event == NET_EVENT_IPV4_ADDR_ADD) {
         LOG_INF("Dirección IPv4 asignada correctamente por el router.");
-        k_sem_give(ipv4_obtenida);
+        k_sem_give(&ipv4_obtenida);
     }
 }
 
