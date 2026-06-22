@@ -12,3 +12,5 @@ sdkconfig.olg
 
 # Archivo con las contraseñas y secretos
 secrets.conf
+
+target/
