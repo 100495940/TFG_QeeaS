@@ -1,17 +1,33 @@
 use rand::RngCore;
 use std::time::Duration;
 use tokio::time;
-use zenoh::Config;
+use zenoh::config::{Config, WhatAmI};
 
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
 const STATUS_TOPIC: &str = "qeeas/esp32/status";
 const QRNG_BLOCK_SIZE: usize = 32;
+const ZENOH_ROUTER_ENDPOINT: &str ="tcp/127.0.0.1:7447";
 
 #[tokio::main]
 async fn main() {
     println!("QeeaS Rust server arrancando.");
 
-    let session = zenoh::open(Config::default())
+    let mut config = Config::default();
+
+    config
+        .insert_json5("mode", &format!("{:?}", WhatAmI::Client).to_lowercase())
+        .expect("No se pudo configurar el modo cliente");
+
+    config
+        .insert_json5(
+            "connect/endpoints",
+            &format!("[\"{}\"]", ZENOH_ROUTER_ENDPOINT),
+        )
+        .expect("No se pudo configurar el endpoint Zenoh");
+
+    println!("Conectando al router Zenoh en {}", ZENOH_ROUTER_ENDPOINT);
+
+    let session = zenoh::open(config)
         .await
         .expect("No se pudo abrir la sesión Zenoh");
 

@@ -1,15 +1,21 @@
-# Usamos la imágen oficial de Zehpyr conn el SDK y Python
+# Usamr imágen oficial de Zehpyr con SDK y Python
 FROM zephyrprojectrtos/zephyr-build:latest
 
-# Usuario root necesario para gestionar permisos de hardware (USB/serial)
+# Usuario root necesario para gestionar permisos de hardware USB/serial
 USER root
 
-# Actualizar herramientas
+# Instalar herramientas base + dependencias para Zenoh
 RUN apt-get update && apt-get install -y \
     ent \
     minicom \
     python3-pip \
-    && rm -rff /var/lib/apt/lists/*
+    curl \
+    gnupg \
+    ca-certificates \
+    iproute2 \
+    netcat-openbsd \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Indicar directorio de trabajo donde se ejecuta el proyecto
-WORKDIR /workspaces/tfg-queeas
+WORKDIR /workspaces/TFG-QueeaS

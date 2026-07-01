@@ -1,10 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Este script se ejecutará automáticamente tras crear el contenedor
 
 echo "=== Configurando dependencias de Python ==="
 pip install -r requirements.txt
 
-echo "=== Configurando el entorno de Zephyr (Automáticamente) ==="
+echo "=== Verificando instalación de Zenoh ==="
+bash install_zenoh.sh
+
+echo "=== Configurando el entorno de Zephyr automáticamente ==="
 
 cd /workspaces
 

@@ -24,6 +24,17 @@ void set_radio_entropy(bool enable) {
 #endif
 }
 
+// Función para extrar entropía bajo demanda
+void get_trng_bytes(uint8_t *buffer, size_t length) {
+    const struct device *entropy_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_entropy));
+    if (!device_is_ready(entropy_dev)) {
+        return;
+    }
+
+    entropy_get_entropy(entropy_dev, buffer, length);
+}
+
+// Función para modo nist
 void send_trng_data_ask(void) {
     // Crear buffer  de 512 bytes
     uint8_t rand_buffer[512];

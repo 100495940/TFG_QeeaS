@@ -1,16 +1,54 @@
 #!/bin/bash
+
+set -euo pipefail
+
 echo "============================================="
 echo "   TFG: Extractor de Entropia ESP32-C6       "
 echo "============================================="
 
 # Detectar modo de ejecución mediante argumentos
 MODO_NIST=false
-EXTRA_ARGS=""
-NOMBRE_MODO="DEBUG (Texto legible)"
+EXTRA_ARGS="-DZP_PLATFORM=zephyr"
+NOMBRE_MODO="DEBUG (Red Zenoh y Texto legible)"
 
-if [ "$1" == "--nist" ]; then
+RUST_SERVER_PID=""
+ZENOH_ROUTER_PID=""
+
+QEEAS_LOG_DIR="/tmp/qeeas_logs"
+QRNG_LOG_DIR="/tmp/qrng_logs"
+mkdir -p "$QEEAS_LOG_DIR"
+mkdir -p "$QRNG_LOG_DIR"
+
+cleanup() {
+    echo ""
+    echo "[INFO] Cerrando entorno de forma segura..."
+
+    if [ -n "$RUST_SERVER_PID" ]; then
+        echo "[INFO] Deteniendo servidor Rust PID=$RUST_SERVER_PID..."
+        kill "$RUST_SERVER_PID" 2>/dev/null || true
+        wait "$RUST_SERVER_PID" 2>/dev/null || true
+    fi
+
+    if [ -n "$ZENOH_ROUTER_PID" ]; then
+        echo "[INFO] Deteniendo router Zenoh PID=$ZENOH_ROUTER_PID..."
+        kill "$ZENOH_ROUTER_PID" 2>/dev/null || true
+        wait "$ZENOH_ROUTER_PID" 2>/dev/null || true
+    fi
+
+    echo "============================================="
+    echo "    Entorno cerrado de forma segura          "
+    echo "============================================="
+}
+
+trap cleanup EXIT INT TERM
+
+# Limpiar entorno previo de Zenoh y Rust
+bash scripts/zenoh_cleanup.sh
+
+# Detectar modo de ejecución mediante argumentos
+if [ "${1:-}" == "--nist" ]; then
     MODO_NIST=true
-    EXTRA_ARGS="-- -DCONFIG_ENTROPY_RAW_MODE=y"
+    EXTRA_ARGS="$EXTRA_ARGS -DCONFIG_ENTROPY_RAW_MODE=y"
     NOMBRE_MODO="NIST (Binario crudo a alta velocidad)"
 fi
 
@@ -21,14 +59,33 @@ fi
 echo "[INFO] Configuración seleccionada: $NOMBRE_MODO"
 echo ""
 
+# Levantar servidor de números cuánticos
+echo "[0/6] Iniciando servidor de números cuánticos (QRNG) en segundo plano..."
+bash scripts/quant_lab.sh > $QRNG_LOG_DIR/qrng_server.log 2>&1 &
+
 # Compilar
 BLOBS_DIR="/workspaces/zephyrproject/modules/hal/espressif/zephyr/blobs"
-echo "[1/4] Verificando dependencias de hardware Wi-Fi"
+
+echo "[1/6] Verificando dependencias de hardware Wi-Fi y Zenoh-Pico"
+# Comprobar blobs de Espressif para el Wi-Fi
 if [ ! -d "$BLOBS_DIR" ]; then
+    echo "[INFO] Blobs de Espressif no encontrados. Descargando..."
     west blobs fetch hal_espressif > /dev/null 2>&1
+else
+    echo "[INFO] Blobs de Espressif ya disponibles."
 fi
 
-echo "[2/4] Limpiando caché antigua y compilando el firmware"
+# Comprobar instalación de Zenoh-Pico
+if [ ! -d "lib/zenoh-pico" ]; then
+    echo "[INFO] Zenoh-Pico no detectado en 'lib/'. Clonando repositorio oficial..."
+    mkdir -p lib
+    git clone https://github.com/eclipse-zenoh/zenoh-pico.git lib/zenoh-pico
+else
+    echo "[INFO] Zenoh-Pico ya instalado localmente. Saltando descarga."
+fi
+
+echo "[2/6] Limpiando caché antigua y compilando el firmware"
+
 rm -rf build/
 west build -p always -b esp32c6_devkitc/esp32c6/hpcore . -- $EXTRA_ARGS
 #west build -p auto -b esp32c6_devkitc/esp32c6/hpcore . -- $EXTRA_ARGS
@@ -38,7 +95,44 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "[3/4] Flasheando código sobre la ESP32-C6"
+if [ "$MODO_NIST" = false ]; then
+    echo "[3/6] Levantando router Zenoh zenoh en segundo plano..."
+
+    if ! command -v zenohd >/dev/null 2>&1; then
+        echo "[ERROR] Zenohd no se encuentra instalado dentro del devcontainer"
+        echo "[ERROR] Instálalo en el Dockerfile o en .devcontainer/setup.sh"
+        exit 1
+    fi
+
+    zenohd --cfg='listen/endpoints:["tcp/0.0.0.0:7447"]' > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
+    ZENOH_ROUTER_PID=$!
+    echo "[INFO] Router Zenoh zenohd iniciado con PID: $ZENOH_ROUTER_PID"
+    echo "[INFO] Puedes revisar los logs del router en: $QEEAS_LOG_DIR/zenoh_router.log"
+
+    sleep 2
+
+    if ss -ltn | grep -q ":7447"; then
+        echo "[INFO] Router Zenoh escuchando en el puerto 7447"
+    else
+        echo "[ERROR] Router Zenoh no está escuchando en el puerto 7447"
+        echo "[ERROR] Revisa los logs en: $QEEAS_LOG_DIR/zenoh_router.log"
+        exit 1
+    fi
+
+    echo "[4/6] Lanzando servidor Rust de Zenoh en segundo plano..."
+    bash scripts/rust.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+
+    RUST_SERVER_PID=$!
+    
+    echo "[INFO] Servidor Zenoh-Rust iniciado con PID: $RUST_SERVER_PID"
+    echo "[INFO] Puedes revisar los logs del servidor en: $QEEAS_LOG_DIR/rust_server.log"
+
+    sleep 2
+else
+    echo "[INFO] Modo NIST activado. No se lanzará el servidor Rust ni el router Zenoh."
+fi
+
+echo "[5/6] Flasheando código sobre la ESP32-C6"
 west flash --esp-device /dev/ttyUSB0
 
 if [ $? -eq 0 ]; then
@@ -46,12 +140,12 @@ if [ $? -eq 0 ]; then
     echo " EXITO: El firmware esta corriendo sobre la placa"
     echo "============================================="
 else
-    echo "Error: No se pudo grabar. Asegurate de haber pasado el USB con usbipd."
+    echo "[ERROR] No se pudo grabar. Asegurate de haber pasado el USB con usbipd."
 fi
 
 # Análisis entropía
 echo ""
-echo "[4/4] Firmware ejecutándose. Escuchando el puerto USB..."
+echo "[6/6] Firmware ejecutándose. Escuchando el puerto USB..."
 sleep 2
 
 if [ "$MODO_NIST" = true ]; then
