@@ -14,6 +14,8 @@ NOMBRE_MODO="DEBUG (Red Zenoh y Texto legible)"
 RUST_SERVER_PID=""
 ZENOH_ROUTER_PID=""
 
+ZENOH_PICO_VERSION="1.9.0"
+
 QEEAS_LOG_DIR="/tmp/qeeas_logs"
 QRNG_LOG_DIR="/tmp/qrng_logs"
 mkdir -p "$QEEAS_LOG_DIR"
@@ -80,9 +82,28 @@ if [ ! -d "lib/zenoh-pico" ]; then
     echo "[INFO] Zenoh-Pico no detectado en 'lib/'. Clonando repositorio oficial..."
     mkdir -p lib
     git clone https://github.com/eclipse-zenoh/zenoh-pico.git lib/zenoh-pico
+    echo "[INFO] Zenoh-Pico instalado con éxito."
 else
     echo "[INFO] Zenoh-Pico ya instalado localmente. Saltando descarga."
 fi
+
+echo "[INFO] Fijando Zenoh-Pico a la versión $ZENOH_PICO_VERSION..."
+cd lib/zenoh-pico
+git fetch --tags
+
+if git rev-parse "$ZENOH_PICO_VERSION" >/dev/null 2>&1; then
+    git checkout "$ZENOH_PICO_VERSION"
+elif git rev-parse "v$ZENOH_PICO_VERSION" >/dev/null 2>&1; then
+    git checkout "v$ZENOH_PICO_VERSION"
+else
+    echo "[ERROR] No se encontró tag de Zenoh-Pico para versión $ZENOH_PICO_VERSION"
+    echo "[ERROR] Tags disponibles similares:"
+    git tag -l | grep "$ZENOH_PICO_VERSION" || true
+    exit 1
+fi
+
+cd /workspaces/TFG_QeeaS
+echo "[INFO] Zenoh-Pico fijado correctamente."
 
 echo "[2/6] Limpiando caché antigua y compilando el firmware"
 
@@ -120,14 +141,58 @@ if [ "$MODO_NIST" = false ]; then
     fi
 
     echo "[4/6] Lanzando servidor Rust de Zenoh en segundo plano..."
-    bash scripts/rust.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+    RUST_PROFILE="${RUST_PROFILE:-debug}"
+    QEEAS_BUILD_RUST="${QEEAS_BUILD_RUST:-1}"
+
+    if [ "$QEEAS_BUILD_RUST" = "1" ]; then
+        echo "[INFO] Compilando servidor Rust antes de lanzarlo..."
+        echo "[INFO] Log de compilación Rust: $QEEAS_LOG_DIR/rust_build.log"
+
+        if ! bash scripts/rust_build.sh > "$QEEAS_LOG_DIR/rust_build.log" 2>&1; then
+            echo "[ERROR] Falló la compilación del servidor Rust."
+            echo "[ERROR] Últimas líneas del log:"
+            tail -80 "$QEEAS_LOG_DIR/rust_build.log"
+            exit 1
+        fi
+    else
+        echo "[INFO] Saltando compilación Rust porque QEEAS_BUILD_RUST=0"
+    fi
+
+    echo "[INFO] Lanzando servidor Rust ya compilado..."
+    bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
 
     RUST_SERVER_PID=$!
-    
-    echo "[INFO] Servidor Zenoh-Rust iniciado con PID: $RUST_SERVER_PID"
-    echo "[INFO] Puedes revisar los logs del servidor en: $QEEAS_LOG_DIR/rust_server.log"
 
-    sleep 2
+    echo "[INFO] Servidor Rust iniciado con PID: $RUST_SERVER_PID"
+    echo "[INFO] Log del servidor Rust: $QEEAS_LOG_DIR/rust_server.log"
+
+    echo "[INFO] Esperando a que el servidor Rust abra sesión Zenoh..."
+
+    RUST_READY=false
+
+    for i in {1..60}; do
+        if ! kill -0 "$RUST_SERVER_PID" 2>/dev/null; then
+            echo "[ERROR] El servidor Rust ha terminado antes de estar listo."
+            echo "[ERROR] Últimas líneas del log:"
+            tail -80 "$QEEAS_LOG_DIR/rust_server.log"
+            exit 1
+        fi
+
+        if grep -q "Sesión de Zenoh abierta\|Publicando QRNG" "$QEEAS_LOG_DIR/rust_server.log"; then
+            RUST_READY=true
+            echo "[INFO] Servidor Rust conectado correctamente a Zenoh."
+            break
+        fi
+
+        sleep 1
+    done
+
+    if [ "$RUST_READY" != "true" ]; then
+        echo "[ERROR] Timeout esperando al servidor Rust."
+        echo "[ERROR] Últimas líneas del log:"
+        tail -80 "$QEEAS_LOG_DIR/rust_server.log"
+        exit 1
+    fi
 else
     echo "[INFO] Modo NIST activado. No se lanzará el servidor Rust ni el router Zenoh."
 fi

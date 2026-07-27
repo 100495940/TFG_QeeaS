@@ -1,8 +1,12 @@
 #define ZENOH_ZEPHYR 1
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/net/socket.h>
 #include <zenoh-pico.h>
 #include "entropy.h"
 
@@ -16,7 +20,7 @@ static z_owned_session_t session;
 static z_owned_publisher_t status_publisher;
 static z_owned_subscriber_t qrng_subscriber;
 
-// Función que se ejecuta cuando recibe mensaje en el topico de entropía
+// Función que se ejecuta cuando recibe mensaje en el tópico de entropía
 static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     ARG_UNUSED(arg);
 
@@ -72,6 +76,113 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     LOG_INF("Estado publicado correctamente en %s: %s ", STATUS_TOPIC, status_msg);
 }
 
+// Función para parsear la dirección IP de la máquina local sacada de secrets.conf
+static int parse_zenoh_tcp_endpoint(const char *endpoint, 
+                                    char *ip_buffer, 
+                                    size_t ip_buffer_size, 
+                                    uint16_t *port) {
+    const char *prefix = "tcp/";
+    const char *ip_start;
+    const char *port_start;
+    size_t ip_len;
+    char port_buffer[8];
+    unsigned long parsed_port;
+
+    if (endpoint == NULL || ip_buffer == NULL || port == NULL) {
+        return -EINVAL;
+    }
+
+    if (strncmp(endpoint, prefix, strlen(prefix)) != 0) {
+        LOG_ERR("TCP test: endpoint no soportado: %s", endpoint);
+        LOG_ERR("TCP test: se esperaba formato tcp/IP:PUERTO");
+        return -EINVAL;
+    }
+
+    ip_start = endpoint + strlen(prefix);
+    port_start = strrchr(ip_start, ':');
+
+    if (port_start == NULL) {
+        LOG_ERR("TCP test: endpoint sin puerto: %s", endpoint);
+        return -EINVAL;
+    }
+
+    ip_len = (size_t)(port_start - ip_start);
+
+    if (ip_len == 0 || ip_len >= ip_buffer_size) {
+        LOG_ERR("TCP test: IP inválida o demasiado larga");
+        return -EINVAL;
+    }
+
+    memcpy(ip_buffer, ip_start, ip_len);
+    ip_buffer[ip_len] = '\0';
+
+    port_start++;
+
+    if (strlen(port_start) == 0 || strlen(port_start) >= sizeof(port_buffer)) {
+        LOG_ERR("TCP test: puerto inválido");
+        return -EINVAL;
+    }
+
+    strcpy(port_buffer, port_start);
+
+    parsed_port = strtoul(port_buffer, NULL, 10);
+
+    if (parsed_port == 0 || parsed_port > 65535) {
+        LOG_ERR("TCP test: puerto fuera de rango: %lu", parsed_port);
+        return -EINVAL;
+    }
+
+    *port = (uint16_t)parsed_port;
+
+    return 0;
+}
+
+// Función para comprobar la conexión TCP con el host del router Zenoh
+static int probar_conexion_tcp_host(void) {
+    int sock;
+    struct sockaddr_in server_addr;
+    char ip[32];
+    uint16_t port;
+    int ret;
+
+    ret = parse_zenoh_tcp_endpoint(CONFIG_ZENOH_ENDPOINT, ip, sizeof(ip), &port);
+    if (ret < 0) {
+        LOG_ERR("TCP test: no se pudo interpretar CONFIG_ZENOH_ENDPOINT");
+        return ret;
+    }
+
+    LOG_INF("TCP test: endpoint parseado correctamente: IP=%s PUERTO=%u", ip, port);
+
+    sock = zsock_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock < 0) {
+        LOG_ERR("TCP test: no se pudo crear socket. errno=%d", errno);
+        return -1;
+    }
+
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+
+    if (zsock_inet_pton(AF_INET, ip, &server_addr.sin_addr) != 1) {
+        LOG_ERR("TCP test: IP inválida");
+        close(sock);
+        return -1;
+    }
+
+    LOG_INF("TCP test: intentando conectar a %s:%u", ip, port);
+
+    if (zsock_connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        LOG_ERR("TCP test: connect falló. errno=%d", errno);
+        close(sock);
+        return -1;
+    }
+
+    LOG_INF("TCP test: conexión TCP OK con %s:%u", ip, port);
+
+    zsock_close(sock);
+    return 0;
+}
+
 // Hilo principal de Zenoh
 void zenoh_client_thread(void) {
     LOG_INF("Iniciando Zenoh-Pico en el ESP32-C6");
@@ -82,6 +193,9 @@ void zenoh_client_thread(void) {
         return;
     }
     LOG_INF("Abriendo sesión de red");
+    LOG_INF("Endpoint Zenoh configurado: %s", CONFIG_ZENOH_ENDPOINT);
+
+    probar_conexion_tcp_host();
 
     if (zp_config_insert(z_config_loan_mut(&config), Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_CLIENT) < 0) {
         LOG_ERR("Error configurando Zenoh en modo cliente");
@@ -93,8 +207,9 @@ void zenoh_client_thread(void) {
         return;
     }
 
-    if (z_open(&session, z_move(config), NULL) < 0) {
-        LOG_ERR("Fallo al abrir la sesión de Zenoh-Pico. ¿Está el servidor Rust encendido?");
+    z_result_t open_result = z_open(&session, z_move(config), NULL);
+    if (open_result < 0) {
+        LOG_ERR("Fallo al abrir la sesión de Zenoh-Pico: %d. No se pudo conectar al router Zenoh en %s", open_result, CONFIG_ZENOH_ENDPOINT);
         return;
     }
 

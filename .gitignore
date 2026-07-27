@@ -16,3 +16,4 @@ secrets.conf
 target/
 lib/
 qrng_server/
+tmp/

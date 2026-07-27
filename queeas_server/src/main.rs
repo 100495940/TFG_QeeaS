@@ -1,12 +1,12 @@
 use rand::RngCore;
 use std::time::Duration;
 use tokio::time;
-use zenoh::config::{Config, WhatAmI};
+use zenoh::config::Config;
 
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
 const STATUS_TOPIC: &str = "qeeas/esp32/status";
 const QRNG_BLOCK_SIZE: usize = 32;
-const ZENOH_ROUTER_ENDPOINT: &str ="tcp/127.0.0.1:7447";
+const ZENOH_ROUTER_ENDPOINT: &str = "tcp/127.0.0.1:7447";
 
 #[tokio::main]
 async fn main() {
@@ -15,7 +15,7 @@ async fn main() {
     let mut config = Config::default();
 
     config
-        .insert_json5("mode", &format!("{:?}", WhatAmI::Client).to_lowercase())
+        .insert_json5("mode", r#""client""#)
         .expect("No se pudo configurar el modo cliente");
 
     config
