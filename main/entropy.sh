@@ -62,13 +62,25 @@ echo "[INFO] Configuración seleccionada: $NOMBRE_MODO"
 echo ""
 
 # Levantar servidor de números cuánticos
-echo "[0/6] Iniciando servidor de números cuánticos (QRNG) en segundo plano..."
-bash scripts/quant_lab.sh > $QRNG_LOG_DIR/qrng_server.log 2>&1 &
+echo "[0/6] Iniciando servidor de números cuánticos (QRNG)..."
+rm -f /tmp/qeaas_api_url
+if ! bash scripts/quant_lab.sh > "$QRNG_LOG_DIR/qrng_server.log" 2>&1; then
+    echo "[ERROR] No se pudo iniciar el servidor QEaaS/QRNG."
+    echo "[ERROR] Últimos logs:"
+    tail -120 "$QRNG_LOG_DIR/qrng_server.log" || true
+    exit 1
+fi
+
+QEAAS_API_URL="$(cat /tmp/qeaas_api_url)"
+export QEAAS_API_URL
+
+echo "[INFO] QEaaS disponible para Rust en: $QEAAS_API_URL"
 
 # Compilar
 BLOBS_DIR="/workspaces/zephyrproject/modules/hal/espressif/zephyr/blobs"
 
 echo "[1/6] Verificando dependencias de hardware Wi-Fi y Zenoh-Pico"
+#west blobs fetch hal_espressif
 # Comprobar blobs de Espressif para el Wi-Fi
 if [ ! -d "$BLOBS_DIR" ]; then
     echo "[INFO] Blobs de Espressif no encontrados. Descargando..."
@@ -104,6 +116,40 @@ fi
 
 cd /workspaces/TFG_QeeaS
 echo "[INFO] Zenoh-Pico fijado correctamente."
+
+echo "[INFO] Aplicando parche de compatibilidad Zenoh-Pico / Zephyr..."
+
+python3 - <<'PY'
+from pathlib import Path
+
+ZENOH_PICO_DIR = Path("/workspaces/TFG_QeeaS/lib/zenoh-pico")
+
+replacement = """#if __has_include(<zephyr/version.h>)
+#include <zephyr/version.h>
+#else
+#include <version.h>
+#endif"""
+
+patched_files = []
+
+for path in ZENOH_PICO_DIR.rglob("*"):
+    if path.suffix not in [".c", ".h"]:
+        continue
+
+    text = path.read_text(errors="ignore")
+
+    if "#include <version.h>" in text:
+        text = text.replace("#include <version.h>", replacement)
+        path.write_text(text)
+        patched_files.append(str(path))
+
+if patched_files:
+    print("[OK] Archivos parcheados:")
+    for file in patched_files:
+        print(" -", file)
+else:
+    print("[INFO] No había includes <version.h> pendientes de parchear.")
+PY
 
 echo "[2/6] Limpiando caché antigua y compilando el firmware"
 

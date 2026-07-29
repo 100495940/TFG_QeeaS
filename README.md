@@ -1,4 +1,4 @@
-# TFG: Entropy as a Service (QeeaS) con ESP32-C6, Zephyr RTOS, Rust y Zenoh
+"# TFG: Entropy as a Service (QeeaS) con ESP32-C6, Zephyr RTOS, Rust y Zenoh
 
 Este proyecto implementa una arquitectura de **Edge Computing Criptográfico** para la generación y distribución de entropía híbrida. La solución combina:
 
