@@ -113,7 +113,7 @@ fi
 
 DOCKER_GATEWAY_IP="$(ip route | awk '/default/ { print $3 }')"
 echo "[QRNG] Docker gateway IP: $DOCKER_GATEWAY_IP"
-echo "$DOCKER_GATEWAY_IP" > /tmp/qeaas_api_url
+echo "http://$DOCKER_GATEWAY_IP:6065/" > /tmp/qeaas_api_url
 
 echo "[QRNG] API QEaaS lista."
 echo "[QRNG] Prueba de respuesta:"
