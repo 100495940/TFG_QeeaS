@@ -1,0 +1,25 @@
+# Linux / devcontainer scripts
+*.sh text eol=lf
+
+# Código fuente
+*.c text eol=lf
+*.h text eol=lf
+*.rs text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+
+# Zephyr / CMake / config
+CMakeLists.txt text eol=lf
+*.cmake text eol=lf
+Kconfig text eol=lf
+kconfig text eol=lf
+prj.conf text eol=lf
+*.conf text eol=lf
+
+# Devcontainer
+Dockerfile text eol=lf
+*.json text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
