@@ -67,6 +67,7 @@ target_sources(app PRIVATE
     main/entropy.c
     main/wifi.c
     main/zenoh_client.c
+    main/entropy_pool.c
 )
 
 # Añadir zenoh-pico como una librería completa
