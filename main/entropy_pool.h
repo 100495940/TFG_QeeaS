@@ -17,4 +17,6 @@ int entropy_pool_extract(uint8_t *out, size_t out_len);
 
 uint64_t entropy_pool_get_mix_counter(void);
 
+const char *entropy_pool_get_last_mix_mode(void);
+
 #endif

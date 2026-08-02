@@ -13,6 +13,7 @@
 
 #define QRNG_TOPIC "qeeas/qrng/chunk"
 #define STATUS_TOPIC "qeeas/esp32/status"
+#define ENTROPY_OUTPUT_TOPIC "qeeas/esp32/entropy"
 #define BLOCK_SIZE 32
 
 LOG_MODULE_REGISTER(zenoh_client, LOG_LEVEL_INF);
@@ -47,36 +48,49 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
         return;
     }
 
-    LOG_INF("Bloque QRNG recibido correctamente (%zu bytes)", read_bytes);
+    LOG_INF("Bloque QRNG recibido correctamente (%zu bytes). qrng: %02x%02x%02x%02x", 
+        read_bytes, qrng_buffer[0], qrng_buffer[1], qrng_buffer[2], qrng_buffer[3]);
 
     // Extraer entropía local del TRNG de la placa
     get_trng_bytes(trng_buffer, BLOCK_SIZE);
+    LOG_INF("Bloque TRNG recibido correctamente. trng: %02x%02x%02x%02x", 
+        trng_buffer[0], qrng_buffer[1], trng_buffer[2], trng_buffer[3]);
 
     if (entropy_pool_mix(qrng_buffer, BLOCK_SIZE, trng_buffer, BLOCK_SIZE) < 0) {
         LOG_ERR("Error actualizando el pool local de entropía");
         return;
     }
 
+    LOG_INF("Fusión completada. TRNG y QRNG combinados.");
+
     if (entropy_pool_extract(final_entropy_buffer, BLOCK_SIZE) < 0) {
         LOG_ERR("Error extrayendo entropía desde el pool local");
         return;
     }
 
-    LOG_INF("Fusión completada. Entropía extraída desde el pool local.");
-    LOG_INF("Contador de mezclas del pool: %llu",
-            (unsigned long long)entropy_pool_get_mix_counter());
+    LOG_INF("Entropía extraída desde el pool local.");
+    LOG_INF("Pool mode: %s, mix_counter: %llu, output: %02x%02x%02x%02x",
+            entropy_pool_get_last_mix_mode(),
+            (unsigned long long)entropy_pool_get_mix_counter(),
+            final_entropy_buffer[0], final_entropy_buffer[1],
+            final_entropy_buffer[2], final_entropy_buffer[3]);
 
     // Fusión criptográfica ambos bloques de entropía usando XOR
     /*for (size_t i = 0; i < BLOCK_SIZE; i++) {
         final_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
     }*/
 
-    LOG_INF("Fusión completada. TRNG y QRNG combinados.");
-
     // Publicar el bloque de status
-    char status_msg[64];
-    snprintf(status_msg, sizeof(status_msg), "Fusión OK - Pool local de entropía actualizado. Contador de mezclas: %llu",
-             (unsigned long long)entropy_pool_get_mix_counter());
+    char status_msg[256];
+    snprintf(status_msg, 
+            sizeof(status_msg), 
+            "Fusión OK - Pool local de entropía actualizado. Modo: %s. "
+            "Contador de mezclas: %llu, qrng: %02x%02x%02x%02x out: %02x%02x%02x%02x",
+            entropy_pool_get_last_mix_mode(),
+            (unsigned long long)entropy_pool_get_mix_counter(),
+            qrng_buffer[0], qrng_buffer[1], qrng_buffer[2], qrng_buffer[3],
+            final_entropy_buffer[0], final_entropy_buffer[1],
+            final_entropy_buffer[2], final_entropy_buffer[3]);
 
     z_owned_bytes_t pub_payload;
     if (z_bytes_copy_from_str(&pub_payload, status_msg) < 0) {
