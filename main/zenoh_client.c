@@ -9,6 +9,7 @@
 #include <zephyr/net/socket.h>
 #include <zenoh-pico.h>
 #include "entropy.h"
+#include "entropy_pool.h"
 
 #define QRNG_TOPIC "qeeas/qrng/chunk"
 #define STATUS_TOPIC "qeeas/esp32/status"
@@ -51,16 +52,31 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     // Extraer entropía local del TRNG de la placa
     get_trng_bytes(trng_buffer, BLOCK_SIZE);
 
-    // Fusión criptográfica ambos bloques de entropía usando XOR
-    for (size_t i = 0; i < BLOCK_SIZE; i++) {
-        final_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
+    if (entropy_pool_mix(qrng_buffer, BLOCK_SIZE, trng_buffer, BLOCK_SIZE) < 0) {
+        LOG_ERR("Error actualizando el pool local de entropía");
+        return;
     }
+
+    if (entropy_pool_extract(final_entropy_buffer, BLOCK_SIZE) < 0) {
+        LOG_ERR("Error extrayendo entropía desde el pool local");
+        return;
+    }
+
+    LOG_INF("Fusión completada. Entropía extraída desde el pool local.");
+    LOG_INF("Contador de mezclas del pool: %llu",
+            (unsigned long long)entropy_pool_get_mix_counter());
+
+    // Fusión criptográfica ambos bloques de entropía usando XOR
+    /*for (size_t i = 0; i < BLOCK_SIZE; i++) {
+        final_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
+    }*/
 
     LOG_INF("Fusión completada. TRNG y QRNG combinados.");
 
     // Publicar el bloque de status
     char status_msg[64];
-    snprintf(status_msg, sizeof(status_msg), "Fusión OK - Pool de entropía local listo");
+    snprintf(status_msg, sizeof(status_msg), "Fusión OK - Pool local de entropía actualizado. Contador de mezclas: %llu",
+             (unsigned long long)entropy_pool_get_mix_counter());
 
     z_owned_bytes_t pub_payload;
     if (z_bytes_copy_from_str(&pub_payload, status_msg) < 0) {
@@ -186,6 +202,9 @@ static int probar_conexion_tcp_host(void) {
 // Hilo principal de Zenoh
 void zenoh_client_thread(void) {
     LOG_INF("Iniciando Zenoh-Pico en el ESP32-C6");
+
+    // Inicializar el pool de entropía local al arrancar Zenoh
+    entropy_pool_init();
 
     z_owned_config_t config;
     if (z_config_default(&config) < 0) {
