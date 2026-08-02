@@ -18,6 +18,8 @@ ZENOH_PICO_VERSION="1.9.0"
 
 QEEAS_LOG_DIR="/tmp/qeeas_logs"
 QRNG_LOG_DIR="/tmp/qrng_logs"
+ENTROPY_RESULTS_DIR="/tmp/entropy_results"
+
 mkdir -p "$QEEAS_LOG_DIR"
 mkdir -p "$QRNG_LOG_DIR"
 
