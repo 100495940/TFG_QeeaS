@@ -2,12 +2,20 @@ use anyhow::{Context, Result};
 use rand::RngCore;
 use serde::Deserialize;
 use std::env;
+use std::fs::{create_dir_all, File, OpenOptions};
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time;
 use zenoh::config::Config;
 
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
 const STATUS_TOPIC: &str = "qeeas/esp32/status";
+const ENTROPY_SOURCE_TRNG_TOPIC: &str = "qeeas/esp32/entropy/source/trng";
+const ENTROPY_SOURCE_QRNG_TOPIC: &str = "qeeas/esp32/entropy/source/qrng";
+const ENTROPY_FINAL_ACTIVE_TOPIC: &str = "qeeas/esp32/entropy/final/active";
+const ENTROPY_FINAL_XOR_TOPIC: &str = "qeeas/esp32/entropy/final/xor";
 const QRNG_BLOCK_SIZE: usize = 32;
 const QEAAS_MAX_BYTES_PER_REQUEST: usize = 8;
 const ZENOH_ROUTER_ENDPOINT: &str = "tcp/127.0.0.1:7447";
@@ -177,6 +185,62 @@ async fn get_qrng_block(
     }
 }
 
+//Función para abrir un archivo de captura de entropía, creando directorios si es necesario
+fn open_capture_file(path: &Path) -> anyhow::Result<Arc<Mutex<File>>> {
+    if let Some(parent) = path.parent() {
+        create_dir_all(parent)?;
+    }
+
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(path)?;
+
+    Ok(Arc::new(Mutex::new(file)))
+}
+
+// Función para escribir los bloques binarios de entropía en los archivos de captura
+fn append_entropy_sample(
+    label: &'static str,
+    file: &Arc<Mutex<File>>,
+    bytes: &[u8],
+) {
+    // Bloquear el archivo para escritura
+    let mut guard = match file.lock() {
+        Ok(guard) => guard,
+        Err(err) => {
+            eprintln!("[ERROR] No se pudo bloquear archivo de {}: {}", label, err);
+            return;
+        }
+    };
+
+    // Escribir todos los bytes recibidos
+    if let Err(err) = guard.write_all(bytes) {
+        eprintln!("[ERROR] No se pudo escribir muestra {}: {}", label, err);
+        return;
+    }
+
+    // Volcar los datos en el archivo
+    if let Err(err) = guard.flush() {
+        eprintln!("[WARN] No se pudo hacer flush de {}: {}", label, err);
+    }
+
+    let head_len = bytes.len().min(4);
+
+    println!(
+        "[ENTROPY_CAPTURE] label={} bytes={} head={}",
+        label,
+        bytes.len(),
+        hex::encode(&bytes[..head_len])
+    );
+}
+
+// Función auxiliar para mapear tipado de errores
+fn map_zenoh_error(err: Box<dyn std::error::Error + Send + Sync>) -> anyhow::Error {
+    anyhow::anyhow!("{}", err)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("QeeaS Rust server arrancando.");
@@ -216,6 +280,26 @@ async fn main() -> Result<()> {
 
     println!("Sesión de Zenoh abierta");
 
+    let experiment_label = std::env::var("ENTROPY_EXPERIMENT")
+        .unwrap_or_else(|_| "default".to_string());
+
+    let capture_dir = PathBuf::from("data")
+        .join("captures")
+        .join(&experiment_label);
+
+    create_dir_all(&capture_dir)?;
+
+    println!(
+        "[INFO] Captura de entropia activada. Experimento={} dir={}",
+        experiment_label,
+        capture_dir.display()
+    );
+
+    let trng_file = open_capture_file(&capture_dir.join("entropy_source_trng.bin"))?;
+    let qrng_file = open_capture_file(&capture_dir.join("entropy_source_qrng.bin"))?;
+    let active_file = open_capture_file(&capture_dir.join("entropy_final_active.bin"))?;
+    let xor_file = open_capture_file(&capture_dir.join("entropy_final_xor.bin"))?;
+
     let listener = session
         .declare_subscriber(STATUS_TOPIC)
         .await
@@ -227,6 +311,50 @@ async fn main() -> Result<()> {
             println!("Estado recibido desde ESP32: {}", payload);
         }
     });
+
+    let trng_file_for_sub = Arc::clone(&trng_file);
+
+    let _trng_subscriber = session
+        .declare_subscriber(ENTROPY_SOURCE_TRNG_TOPIC)
+        .callback(move |sample| {
+            let payload = sample.payload().to_bytes();
+            append_entropy_sample("source_trng", &trng_file_for_sub, payload.as_ref());
+        })
+        .await
+        .map_err(map_zenoh_error)?;
+
+    let qrng_file_for_sub = Arc::clone(&qrng_file);
+
+    let _qrng_subscriber = session
+        .declare_subscriber(ENTROPY_SOURCE_QRNG_TOPIC)
+        .callback(move |sample| {
+            let payload = sample.payload().to_bytes();
+            append_entropy_sample("source_qrng", &qrng_file_for_sub, payload.as_ref());
+        })
+        .await
+        .map_err(map_zenoh_error)?;
+
+    let active_file_for_sub = Arc::clone(&active_file);
+
+    let _active_subscriber = session
+        .declare_subscriber(ENTROPY_FINAL_ACTIVE_TOPIC)
+        .callback(move |sample| {
+            let payload = sample.payload().to_bytes();
+            append_entropy_sample("final_active", &active_file_for_sub, payload.as_ref());
+        })
+        .await
+        .map_err(map_zenoh_error)?;
+
+    let xor_file_for_sub = Arc::clone(&xor_file);
+
+    let _xor_subscriber = session
+        .declare_subscriber(ENTROPY_FINAL_XOR_TOPIC)
+        .callback(move |sample| {
+            let payload = sample.payload().to_bytes();
+            append_entropy_sample("final_xor", &xor_file_for_sub, payload.as_ref());
+        })
+        .await
+        .map_err(map_zenoh_error)?;
 
     loop {
         let (qrng_block, source_name) =

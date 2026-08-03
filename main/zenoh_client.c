@@ -13,7 +13,10 @@
 
 #define QRNG_TOPIC "qeeas/qrng/chunk"
 #define STATUS_TOPIC "qeeas/esp32/status"
-#define ENTROPY_OUTPUT_TOPIC "qeeas/esp32/entropy"
+#define ENTROPY_SOURCE_TRNG_TOPIC   "qeeas/esp32/entropy/source/trng"
+#define ENTROPY_SOURCE_QRNG_TOPIC   "qeeas/esp32/entropy/source/qrng"
+#define ENTROPY_FINAL_ACTIVE_TOPIC  "qeeas/esp32/entropy/final/active"
+#define ENTROPY_FINAL_XOR_TOPIC     "qeeas/esp32/entropy/final/xor"
 #define BLOCK_SIZE 32
 
 LOG_MODULE_REGISTER(zenoh_client, LOG_LEVEL_INF);
@@ -21,6 +24,116 @@ LOG_MODULE_REGISTER(zenoh_client, LOG_LEVEL_INF);
 static z_owned_session_t session;
 static z_owned_publisher_t status_publisher;
 static z_owned_subscriber_t qrng_subscriber;
+
+// Función para crear el status enriquecido
+static int crear_status_fusion(char *status_msg,
+                               size_t status_msg_len,
+                               const uint8_t *qrng_buffer,
+                               const uint8_t *trng_buffer,
+                               const uint8_t *final_entropy_buffer) {
+    int written;
+
+    if (status_msg == NULL ||
+        qrng_buffer == NULL ||
+        trng_buffer == NULL ||
+        final_entropy_buffer == NULL ||
+        status_msg_len == 0) {
+        return -EINVAL;
+    }
+
+    written = snprintf(status_msg,
+                       status_msg_len,
+                       "FUSION_OK "
+                       "mode=%s "
+                       "counter=%llu "
+                       "qrng_len=%d "
+                       "trng_len=%d "
+                       "out_len=%d "
+                       "qrng_head=%02x%02x%02x%02x "
+                       "trng_head=%02x%02x%02x%02x "
+                       "out_head=%02x%02x%02x%02x",
+                       entropy_pool_get_last_mix_mode(),
+                       (unsigned long long)entropy_pool_get_mix_counter(),
+                       BLOCK_SIZE,
+                       BLOCK_SIZE,
+                       BLOCK_SIZE,
+                       qrng_buffer[0], qrng_buffer[1],
+                       qrng_buffer[2], qrng_buffer[3],
+                       trng_buffer[0], trng_buffer[1],
+                       trng_buffer[2], trng_buffer[3],
+                       final_entropy_buffer[0], final_entropy_buffer[1],
+                       final_entropy_buffer[2], final_entropy_buffer[3]);
+
+    if (written < 0) {
+        return -EINVAL;
+    }
+
+    if ((size_t)written >= status_msg_len) {
+        LOG_WRN("Status de fusion truncado. written=%d buffer=%zu",
+                written,
+                status_msg_len);
+    }
+
+    return 0;
+}
+
+// Función para publicar bloques de bytes puros para su posterior análisis en el servidor Rust
+static int publicar_bytes_zenoh(const z_loaned_session_t *session,
+                                const char *topic,
+                                const uint8_t *buffer,
+                                size_t buffer_len) {
+    z_view_keyexpr_t key_pub;
+    z_owned_publisher_t publisher;
+    z_owned_bytes_t payload;
+    int ret;
+
+    if (session == NULL || topic == NULL || buffer == NULL || buffer_len == 0) {
+        LOG_ERR("No se puede publicar payload binario: argumentos invalidos");
+        return -EINVAL;
+    }
+
+    // Crear el publicador para enviar el bloque de bytes al servidor Rust
+    ret = z_view_keyexpr_from_str(&key_pub, topic);
+    if (ret < 0) {
+        LOG_ERR("Keyexpr invalido para topic %s: %d", topic, ret);
+        return ret;
+    }
+
+    ret = z_declare_publisher(session,
+                          &publisher,
+                          z_loan(key_pub),
+                          NULL);
+    if (ret < 0) {
+        LOG_ERR("No se pudo declarar publisher binario para %s: %d",
+                topic,
+                ret);
+        return ret;
+    }
+
+    ret = z_bytes_copy_from_buf(&payload, buffer, buffer_len);
+    if (ret < 0) {
+        LOG_ERR("No se pudo crear payload binario para %s: %d",
+                topic,
+                ret);
+        z_drop(z_move(publisher));
+        return ret;
+    }
+
+    ret = z_publisher_put(z_loan(publisher), z_move(payload), NULL);
+
+    z_drop(z_move(publisher));
+
+    if (ret < 0) {
+        LOG_ERR("Error publicando payload binario en %s: %d",
+                topic,
+                ret);
+        return ret;
+    }
+
+    LOG_INF("Payload binario publicado en %s (%zu bytes)", topic, buffer_len);
+
+    return 0;
+}
 
 // Función que se ejecuta cuando recibe mensaje en el tópico de entropía
 static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
@@ -38,6 +151,7 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     uint8_t qrng_buffer[BLOCK_SIZE];
     uint8_t trng_buffer[BLOCK_SIZE];
     uint8_t final_entropy_buffer[BLOCK_SIZE];
+    uint8_t xor_entropy_buffer[BLOCK_SIZE];
 
     // Recibir entropía cuántica del servidor
     z_bytes_reader_t reader = z_bytes_get_reader(payload);
@@ -75,10 +189,10 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
             final_entropy_buffer[0], final_entropy_buffer[1],
             final_entropy_buffer[2], final_entropy_buffer[3]);
 
-    // Fusión criptográfica ambos bloques de entropía usando XOR
-    /*for (size_t i = 0; i < BLOCK_SIZE; i++) {
-        final_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
-    }*/
+    // Fusión criptográfica experimental usando XOR
+    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+        xor_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
+    }
 
     // Publicar el bloque de status
     char status_msg[256];
@@ -104,6 +218,35 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     }
 
     LOG_INF("Estado publicado correctamente en %s: %s ", STATUS_TOPIC, status_msg);
+
+    if (publicar_bytes_zenoh(z_loan(session),
+                            ENTROPY_SOURCE_QRNG_TOPIC,
+                            qrng_buffer,
+                            BLOCK_SIZE) < 0) {
+        LOG_WRN("No se pudo publicar QRNG en topic de observabilidad");
+    }
+
+    if (publicar_bytes_zenoh(z_loan(session),
+                            ENTROPY_SOURCE_TRNG_TOPIC,
+                            trng_buffer,
+                            BLOCK_SIZE) < 0) {
+        LOG_WRN("No se pudo publicar TRNG en topic de observabilidad");
+    }
+
+    if (publicar_bytes_zenoh(z_loan(session),
+                            ENTROPY_FINAL_XOR_TOPIC,
+                            xor_entropy_buffer,
+                            BLOCK_SIZE) < 0) {
+        LOG_WRN("No se pudo publicar baseline XOR en topic de observabilidad");
+    }
+
+    if (publicar_bytes_zenoh(z_loan(session),
+                            ENTROPY_FINAL_ACTIVE_TOPIC,
+                            final_entropy_buffer,
+                            BLOCK_SIZE) < 0) {
+        LOG_WRN("No se pudo publicar salida final activa en topic de observabilidad");
+    }
+
 }
 
 // Función para parsear la dirección IP de la máquina local sacada de secrets.conf
