@@ -1,0 +1,58 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : final_active
+Archivo                          : data/captures/default/entropy_final_active.bin
+Bytes analizados                 : 512
+Bloques completos de 32 bytes    : 16
+Bytes sobrantes                  : 0
+Valores byte unicos              : 223/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.60923193 bits/byte
+Min-entropia empirica            : 6.19264508 bits/byte
+Chi-cuadrado                     : 244.0000
+p-value chi-cuadrado             : 0.67890545
+Byte mas frecuente               : 142
+Frecuencia byte mas frecuente    : 7
+Probabilidad byte mas frecuente  : 0.01367188
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 4096
+Ceros                            : 2043
+Unos                             : 2053
+Proporcion ceros                 : 0.49877930
+Proporcion unos                  : 0.50122070
+Monobit S_obs                    : 0.15625000
+Monobit p-value                  : 0.87583597
+Runs aplicable                   : True
+Runs count                       : 2019
+Runs p-value                     : 0.36500258
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : 0.0037170416
+Autocorrelacion bits lag-1       : 0.0144007026
+Bloques totales de 32 bytes      : 16
+Bloques unicos de 32 bytes       : 16
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 1
+Ratio compresion zlib            : 1.02148438
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 0
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/blake2s/final_active_metrics.json
+Histograma                       : data/reports/blake2s/final_active_histogram.png
+Shannon por ventanas             : data/reports/blake2s/final_active_windowed_shannon.png
+Autocorrelacion                  : data/reports/blake2s/final_active_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/blake2s/final_active_byte_counts.csv
+
+============================================================

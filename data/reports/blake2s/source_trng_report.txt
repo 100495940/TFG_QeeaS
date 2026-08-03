@@ -1,0 +1,58 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : source_trng
+Archivo                          : data/captures/default/entropy_source_trng.bin
+Bytes analizados                 : 512
+Bloques completos de 32 bytes    : 16
+Bytes sobrantes                  : 0
+Valores byte unicos              : 212/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.53428343 bits/byte
+Min-entropia empirica            : 6.19264508 bits/byte
+Chi-cuadrado                     : 278.0000
+p-value chi-cuadrado             : 0.15418133
+Byte mas frecuente               : 44
+Frecuencia byte mas frecuente    : 7
+Probabilidad byte mas frecuente  : 0.01367188
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 4096
+Ceros                            : 2093
+Unos                             : 2003
+Proporcion ceros                 : 0.51098633
+Proporcion unos                  : 0.48901367
+Monobit S_obs                    : 1.40625000
+Monobit p-value                  : 0.15964990
+Runs aplicable                   : True
+Runs count                       : 2008
+Runs p-value                     : 0.22258248
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : 0.0022595704
+Autocorrelacion bits lag-1       : 0.0193065728
+Bloques totales de 32 bytes      : 16
+Bloques unicos de 32 bytes       : 16
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 2
+Ratio compresion zlib            : 1.02148438
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 0
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/blake2s/source_trng_metrics.json
+Histograma                       : data/reports/blake2s/source_trng_histogram.png
+Shannon por ventanas             : data/reports/blake2s/source_trng_windowed_shannon.png
+Autocorrelacion                  : data/reports/blake2s/source_trng_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/blake2s/source_trng_byte_counts.csv
+
+============================================================
