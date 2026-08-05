@@ -12,9 +12,12 @@ sdkconfig.olg
 
 # Archivo con las contraseñas y secretos
 secrets.conf
+secrets_backup.conf
 
 target/
 lib/
 qrng_server/
 tmp/
 memoria/
+external/
+captures/
