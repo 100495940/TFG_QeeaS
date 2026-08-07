@@ -4,48 +4,51 @@
 
 Etiqueta                         : final_xor
 Archivo                          : data/captures/default/entropy_final_xor.bin
-Bytes analizados                 : 512
-Bloques completos de 32 bytes    : 16
+Bytes analizados                 : 1052864
+Bloques completos de 32 bytes    : 32902
 Bytes sobrantes                  : 0
-Valores byte unicos              : 209/256
+Valores byte unicos              : 256/256
 
 DISTRIBUCION DE BYTES
 ------------------------------------------------------------
-Entropia de Shannon              : 7.51123635 bits/byte
-Min-entropia empirica            : 6.00000000 bits/byte
-Chi-cuadrado                     : 301.0000
-p-value chi-cuadrado             : 0.02529127
-Byte mas frecuente               : 6
-Frecuencia byte mas frecuente    : 8
-Probabilidad byte mas frecuente  : 0.01562500
+Entropia de Shannon              : 7.99983361 bits/byte
+Min-entropia empirica            : 7.93308513 bits/byte
+Chi-cuadrado                     : 242.9907
+p-value chi-cuadrado             : 0.69522730
+Byte mas frecuente               : 76
+Frecuencia byte mas frecuente    : 4308
+Probabilidad byte mas frecuente  : 0.00409170
 
 BALANCE Y TESTS SOBRE BITS
 ------------------------------------------------------------
-Bits analizados                  : 4096
-Ceros                            : 2031
-Unos                             : 2065
-Proporcion ceros                 : 0.49584961
-Proporcion unos                  : 0.50415039
-Monobit S_obs                    : 0.53125000
-Monobit p-value                  : 0.59524555
+Bits analizados                  : 8422912
+Ceros                            : 4209740
+Unos                             : 4213172
+Proporcion ceros                 : 0.49979627
+Proporcion unos                  : 0.50020373
+Monobit S_obs                    : 1.18254084
+Monobit p-value                  : 0.23699117
 Runs aplicable                   : True
-Runs count                       : 2050
-Runs p-value                     : 0.94664985
+Runs count                       : 4210808
+Runs p-value                     : 0.65554515
 
 DEPENDENCIA Y REPETICIONES
 ------------------------------------------------------------
-Autocorrelacion bytes lag-1      : -0.0031891853
-Autocorrelacion bits lag-1       : -0.0008015330
-Bloques totales de 32 bytes      : 16
-Bloques unicos de 32 bytes       : 16
+Autocorrelacion bytes lag-1      : -0.0000337340
+Autocorrelacion bits lag-1       : 0.0001538188
+Bloques totales de 32 bytes      : 32902
+Bloques unicos de 32 bytes       : 32902
 Bloques repetidos de 32 bytes    : 0
-Mayor racha del mismo byte       : 2
-Ratio compresion zlib            : 1.02148438
+Mayor racha del mismo byte       : 3
+Ratio compresion zlib            : 1.00031438
 
 ESTABILIDAD TEMPORAL
 ------------------------------------------------------------
 Tamanho ventana                  : 32768 bytes
-Numero ventanas completas        : 0
+Numero ventanas completas        : 32
+Shannon ventana minimo           : 7.99337208
+Shannon ventana media            : 7.99433728
+Shannon ventana maximo           : 7.99522269
 
 ARCHIVOS GENERADOS
 ------------------------------------------------------------

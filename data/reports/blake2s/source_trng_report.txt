@@ -4,48 +4,51 @@
 
 Etiqueta                         : source_trng
 Archivo                          : data/captures/default/entropy_source_trng.bin
-Bytes analizados                 : 512
-Bloques completos de 32 bytes    : 16
+Bytes analizados                 : 1052832
+Bloques completos de 32 bytes    : 32901
 Bytes sobrantes                  : 0
-Valores byte unicos              : 212/256
+Valores byte unicos              : 256/256
 
 DISTRIBUCION DE BYTES
 ------------------------------------------------------------
-Entropia de Shannon              : 7.53428343 bits/byte
-Min-entropia empirica            : 6.19264508 bits/byte
-Chi-cuadrado                     : 278.0000
-p-value chi-cuadrado             : 0.15418133
-Byte mas frecuente               : 44
-Frecuencia byte mas frecuente    : 7
-Probabilidad byte mas frecuente  : 0.01367188
+Entropia de Shannon              : 7.99980929 bits/byte
+Min-entropia empirica            : 7.93471669 bits/byte
+Chi-cuadrado                     : 278.3706
+p-value chi-cuadrado             : 0.15053299
+Byte mas frecuente               : 201
+Frecuencia byte mas frecuente    : 4303
+Probabilidad byte mas frecuente  : 0.00408707
 
 BALANCE Y TESTS SOBRE BITS
 ------------------------------------------------------------
-Bits analizados                  : 4096
-Ceros                            : 2093
-Unos                             : 2003
-Proporcion ceros                 : 0.51098633
-Proporcion unos                  : 0.48901367
-Monobit S_obs                    : 1.40625000
-Monobit p-value                  : 0.15964990
+Bits analizados                  : 8422656
+Ceros                            : 4213396
+Unos                             : 4209260
+Proporcion ceros                 : 0.50024553
+Proporcion unos                  : 0.49975447
+Monobit S_obs                    : 1.42513497
+Monobit p-value                  : 0.15411819
 Runs aplicable                   : True
-Runs count                       : 2008
-Runs p-value                     : 0.22258248
+Runs count                       : 4210893
+Runs p-value                     : 0.76488299
 
 DEPENDENCIA Y REPETICIONES
 ------------------------------------------------------------
-Autocorrelacion bytes lag-1      : 0.0022595704
-Autocorrelacion bits lag-1       : 0.0193065728
-Bloques totales de 32 bytes      : 16
-Bloques unicos de 32 bytes       : 16
+Autocorrelacion bytes lag-1      : -0.0003587399
+Autocorrelacion bits lag-1       : 0.0001031706
+Bloques totales de 32 bytes      : 32901
+Bloques unicos de 32 bytes       : 32901
 Bloques repetidos de 32 bytes    : 0
-Mayor racha del mismo byte       : 2
-Ratio compresion zlib            : 1.02148438
+Mayor racha del mismo byte       : 3
+Ratio compresion zlib            : 1.00031439
 
 ESTABILIDAD TEMPORAL
 ------------------------------------------------------------
 Tamanho ventana                  : 32768 bytes
-Numero ventanas completas        : 0
+Numero ventanas completas        : 32
+Shannon ventana minimo           : 7.99336042
+Shannon ventana media            : 7.99431554
+Shannon ventana maximo           : 7.99542299
 
 ARCHIVOS GENERADOS
 ------------------------------------------------------------
