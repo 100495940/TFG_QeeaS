@@ -1,0 +1,2 @@
+p2: passed; outcomes 5/5 passed; consumed 900000 of 1052864 bytes; remainder 152864 bytes; rest /workspaces/TFG_QeeaS/data/captures/default/entropy_final_active.bin_rest
+json: /workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p2/ais31-result.json

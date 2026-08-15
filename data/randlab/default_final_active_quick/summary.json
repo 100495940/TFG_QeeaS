@@ -1,0 +1,205 @@
+{
+  "profile": "quick",
+  "overall_status": "passed",
+  "suite_count": 8,
+  "status_counts": {
+    "passed": 8,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "suite": "ais31-p1-t0",
+      "status": "passed",
+      "duration_seconds": 695.272072,
+      "metrics_total": 3,
+      "metrics_passed": 2,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t0/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default/entropy_final_active.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t0/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t0/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ais31-p1-t1-t5",
+      "status": "passed",
+      "duration_seconds": 597.182629,
+      "metrics_total": 7,
+      "metrics_passed": 6,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t1-t5/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default/entropy_final_active.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t1-t5/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p1-t1-t5/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ais31-p2",
+      "status": "passed",
+      "duration_seconds": 509.339392,
+      "metrics_total": 7,
+      "metrics_passed": 6,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p2/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default/entropy_final_active.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p2/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ais31-p2/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ent",
+      "status": "passed",
+      "duration_seconds": 0.468872,
+      "metrics_total": 10,
+      "metrics_passed": 2,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ent/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/ent/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-iid",
+      "status": "passed",
+      "duration_seconds": 3.78134,
+      "metrics_total": 3,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-iid/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-iid/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-non-iid",
+      "status": "passed",
+      "duration_seconds": 29.216497,
+      "metrics_total": 3,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-non-iid/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-non-iid/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-restart",
+      "status": "passed",
+      "duration_seconds": 25.990451,
+      "metrics_total": 3,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-restart/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/entropy-restart/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "practrand",
+      "status": "passed",
+      "duration_seconds": 2.035489,
+      "metrics_total": 1,
+      "metrics_passed": 1,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/practrand/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_final_active_quick/raw/practrand/stderr.txt"
+        }
+      ]
+    }
+  ]
+}

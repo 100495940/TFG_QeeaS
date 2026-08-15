@@ -389,6 +389,20 @@ python3 scripts/compare_entropy_experiments.py \
 
 Además de las métricas propias, el proyecto puede complementar la validación con `randlab`, una herramienta que centraliza varias baterías de evaluación de generadores aleatorios.
 
+Antes de ejecutar las pruebas externas, es necesario preparar el entorno de `randlab` mediante el script de bootstrap del proyecto. Desde la raíz del repositorio:
+
+```bash
+bash scripts/bootstrap_randlab.sh
+```
+
+Una vez finalizada la instalación, se debe activar el entorno virtual asociado a `randlab`:
+
+```bash
+source external/randlab/.venv/bin/activate
+```
+
+A partir de ese momento, las pruebas externas pueden ejecutarse con el comando `randlab run`.
+
 Ejemplo sobre la salida final BLAKE2s:
 
 ```bash
@@ -396,11 +410,14 @@ randlab run \
   --input data/captures/blake2s/entropy_final_active.bin \
   --format raw \
   --profile quick \
+  --suite ais31-p1-t0 \
+  --suite ais31-p1-t1-t5 \
+  --suite ais31-p2 \
   --suite ent \
   --suite practrand \
   --suite entropy-iid \
   --suite entropy-non-iid \
-  --suite testu01-rabbit \
+  --suite entropy-restart \
   --out data/randlab/blake2s_final_quick
 ```
 
@@ -411,17 +428,21 @@ randlab run \
   --input data/captures/blake2s/entropy_final_xor.bin \
   --format raw \
   --profile quick \
+  --suite ais31-p1-t0 \
+  --suite ais31-p1-t1-t5 \
+  --suite ais31-p2 \
   --suite ent \
   --suite practrand \
   --suite entropy-iid \
   --suite entropy-non-iid \
-  --suite testu01-rabbit \
+  --suite entropy-restart \
   --out data/randlab/xor_baseline_quick
 ```
 
-Los perfiles `quick` deben interpretarse como pruebas de validación rápida o smoke tests. Para una evaluación normativa fuerte serían necesarios archivos de mayor tamaño y perfiles más exigentes.
+Los perfiles `quick` deben interpretarse como pruebas de validación rápida o *smoke tests*. Para una evaluación normativa fuerte serían necesarios archivos de mayor tamaño y perfiles más exigentes.
 
 ---
+
 
 ## Reproducibilidad
 
