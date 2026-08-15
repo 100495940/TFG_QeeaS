@@ -82,7 +82,7 @@ echo "[INFO] QEaaS disponible para Rust en: $QEAAS_API_URL"
 BLOBS_DIR="/workspaces/zephyrproject/modules/hal/espressif/zephyr/blobs"
 
 echo "[1/6] Verificando dependencias de hardware Wi-Fi y Zenoh-Pico"
-#west blobs fetch hal_espressif
+west blobs fetch hal_espressif
 # Comprobar blobs de Espressif para el Wi-Fi
 if [ ! -d "$BLOBS_DIR" ]; then
     echo "[INFO] Blobs de Espressif no encontrados. Descargando..."

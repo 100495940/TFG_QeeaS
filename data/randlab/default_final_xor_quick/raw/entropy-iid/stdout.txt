@@ -1,0 +1,10 @@
+Calculating baseline statistics...
+H_original: 7.871996
+H_bitstring: 0.997889
+min(H_original, 8 X H_bitstring): 7.871996
+** Passed chi square tests
+
+** Passed length of longest repeated substring test
+
+** Passed IID permutation tests
+
