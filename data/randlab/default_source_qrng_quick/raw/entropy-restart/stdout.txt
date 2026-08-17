@@ -1,0 +1,23 @@
+H_I: 8.000000
+ALPHA: 5.0251553006530614e-06, X_cutoff: 19
+X_max: 16
+Calculating baseline statistics...
+
+Running IID tests...
+
+Running Most Common Value Estimate...
+** Passed chi square tests
+
+** Passed length of longest repeated substring test
+
+** Passed IID permutation tests
+
+
+H_r: 7.877868
+H_c: 7.877868
+H_I: 8.000000
+
+Validation Test Passed...
+
+min(H_r, H_c, H_I): 7.877868
+

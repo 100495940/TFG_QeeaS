@@ -1,0 +1,18 @@
+{
+  mode: "router",
+
+  listen: {
+    endpoints: [
+      "tls/0.0.0.0:7447"
+    ]
+  },
+
+  transport: {
+    link: {
+      tls: {
+        listen_private_key: "/workspaces/TFG_QeeaS/certs/router/router.key",
+        listen_certificate: "/workspaces/TFG_QeeaS/certs/router/router.crt"
+      }
+    }
+  }
+}

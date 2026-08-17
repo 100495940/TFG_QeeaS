@@ -41,10 +41,12 @@ set(Z_FEATURE_SCOUTING 0 CACHE STRING "" FORCE)
 set(Z_FEATURE_UNICAST_TRANSPORT 1 CACHE STRING "" FORCE)
 set(Z_FEATURE_MULTICAST_TRANSPORT 0 CACHE STRING "" FORCE)
 
+# TLS
+set(Z_FEATURE_LINK_TLS 1 CACHE STRING "" FORCE)
+
 # Desactivar lo que no se necesita al principio
 set(Z_FEATURE_LINK_SERIAL 0 CACHE STRING "" FORCE)
 set(Z_FEATURE_LINK_WS 0 CACHE STRING "" FORCE)
-set(Z_FEATURE_LINK_TLS 0 CACHE STRING "" FORCE)
 
 # Evitar posibles problemas con opciones de socket en Zephyr
 set(Z_FEATURE_TCP_NODELAY 0 CACHE BOOL "" FORCE)
@@ -83,12 +85,46 @@ target_sources(zenohpico_static PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/zenoh-pico/src/system/common/platform.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/zenoh-pico/src/system/zephyr/system.c
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/zenoh-pico/src/system/zephyr/network.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/zenoh-pico/src/system/zephyr/tls.c
 )
 
-target_compile_definitions(zenohpico_static PUBLIC ZENOH_ZEPHYR=1)
+target_compile_definitions(zenohpico_static PUBLIC 
+    ZENOH_ZEPHYR=1
+    Z_FEATURE_LINK_TLS=1
+    )
 
 # Forzar dependencia
 target_link_libraries(zenohpico_static PUBLIC zephyr_interface)
+
+# Si zenoh-pico se compila con TLS en Zephyr, el backend nuevo usa:
+#   - sockets TLS nativos de Zephyr
+#   - tls_credential_add()
+#   - mbedtls/base64.h para decodificar CONFIG_QEEAS_TLS_CA_BASE64
+#
+# Ya NO debe depender de mbedtls/entropy.h ni de la API legacy de Mbed TLS.
+
+if(Z_FEATURE_LINK_TLS)
+    message(STATUS "Configuring TLS support for zenohpico_static on Zephyr")
+
+    if(DEFINED ZEPHYR_MBEDTLS_MODULE_DIR)
+        message(STATUS "Using ZEPHYR_MBEDTLS_MODULE_DIR: ${ZEPHYR_MBEDTLS_MODULE_DIR}")
+        target_include_directories(zenohpico_static PUBLIC
+            ${ZEPHYR_MBEDTLS_MODULE_DIR}/include
+        )
+    elseif(EXISTS "${ZEPHYR_BASE}/../modules/crypto/mbedtls/include/mbedtls/base64.h")
+        message(STATUS "Using fallback Mbed TLS include path from Zephyr workspace")
+        target_include_directories(zenohpico_static PUBLIC
+            ${ZEPHYR_BASE}/../modules/crypto/mbedtls/include
+        )
+    else()
+        message(FATAL_ERROR
+            "No se encontró mbedtls/base64.h. "
+            "Revisa que el módulo modules/crypto/mbedtls exista en el workspace de Zephyr."
+        )
+    endif()
+
+    target_link_libraries(zenohpico_static PUBLIC zephyr_interface)
+endif()
 
 # Enlazar aplicación con zenoh-pico
 target_link_libraries(app PRIVATE zenohpico_static)

@@ -22,6 +22,14 @@ config ZENOH_ENDPOINT
     help
       La dirección IP del router de zenoh al que se conectará la ESP32-C6.
 
+config QEAAS_TLS_CA_BASE64
+    string "CA TLS del router Zenoh codificada en Base64"
+    default ""
+    help
+      Certificado de la CA local en Base64. Se utiliza para que la ESP32-C6
+      pueda validar el certificado presentado por el router Zenoh cuando se
+      emplea un endpoint tls/IP:puerto.
+
 endmenu
 
 config ENTROPY_RAW_MODE

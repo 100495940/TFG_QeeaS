@@ -1,0 +1,205 @@
+{
+  "profile": "quick",
+  "overall_status": "error",
+  "suite_count": 8,
+  "status_counts": {
+    "passed": 5,
+    "failed": 0,
+    "error": 3,
+    "skipped": 0
+  },
+  "suites": [
+    {
+      "suite": "ais31-p1-t0",
+      "status": "passed",
+      "duration_seconds": 715.133747,
+      "metrics_total": 3,
+      "metrics_passed": 2,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t0/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t0/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t0/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ais31-p1-t1-t5",
+      "status": "passed",
+      "duration_seconds": 600.898514,
+      "metrics_total": 7,
+      "metrics_passed": 6,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t1-t5/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t1-t5/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p1-t1-t5/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ais31-p2",
+      "status": "passed",
+      "duration_seconds": 512.392809,
+      "metrics_total": 7,
+      "metrics_passed": 6,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "ais31-json",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p2/ais31-result.json"
+        },
+        {
+          "kind": "ais31-rest-file",
+          "path": "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest"
+        },
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p2/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ais31-p2/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "ent",
+      "status": "passed",
+      "duration_seconds": 0.506812,
+      "metrics_total": 10,
+      "metrics_passed": 2,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ent/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/ent/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-iid",
+      "status": "error",
+      "duration_seconds": 0.43503,
+      "metrics_total": 0,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": "Error: '/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-iid/entropy_source_trng.1m.bin' is empty\nError reading file.\nUsage is: ea_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to 1000000 bits. Test all data by default.\n\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n\t -v: Optional verbosity flag for more output. Can be used multiple times.\n\t -q: Quiet mode, less output to screen. This will override any verbose flags.\n\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n\n\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n\t bits constitute the symbol.\n\n\t -i: Initial Entropy Estimate (Section 3.1.3)\n\n\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n\t\t (not accounting for H_submitter) using the entropy estimators specified in\n\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n\t\t two entropy estimates are computed: H_original and H_bitstring.\n\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n\n\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n\n\t\t Computes the entropy estimate per bit h' for the conditioned sequential dataset if the\n\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n\t\t Returns h' = min(H_bitstring).\n\n\t -o: Set Output Type to JSON\n\n\t\t Changes the output format to JSON and sets the file location for the output file.\n\n\t --version: Prints tool version information",
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-iid/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-iid/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-non-iid",
+      "status": "error",
+      "duration_seconds": 0.077765,
+      "metrics_total": 0,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": "Error: '/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-non-iid/entropy_source_trng.1m.bin' is empty\nError reading file.\nUsage is: ea_non_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to 1000000 bits. Test all data by default.\n\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n\t -v: Optional verbosity flag for more output. Can be used multiple times.\n\t -q: Quiet mode, less output to screen. This will override any verbose flags.\n\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n\n\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n\t bits constitute the symbol.\n\n\t -i: Initial Entropy Estimate (Section 3.1.3)\n\n\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n\t\t (not accounting for H_submitter) using the entropy estimators specified in\n\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n\t\t two entropy estimates are computed: H_original and H_bitstring.\n\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n\n\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n\n\t\t Computes the entropy estimate per bit h' for the conditioned sequential dataset if the\n\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n\t\t Returns h' = min(H_bitstring).\n\n\t -o: Set Output Type to JSON\n\n\t\t Changes the output format to JSON and sets the file location for the output file.\n\n\t --version: Prints tool version information",
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-non-iid/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-non-iid/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "entropy-restart",
+      "status": "error",
+      "duration_seconds": 0.053975,
+      "metrics_total": 0,
+      "metrics_passed": 0,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": "Error: '/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-restart/entropy_source_trng.1m.bin' is empty\nError reading file.\nUsage is: ea_restart [-i|-n] [-v] [-q] [-s <simulation count>] <file_name> [bits_per_symbol] <H_I>\n\n\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),\n\t and in the \"row dataset\" format described in SP800-90B Section 3.1.4.1.\n\t [bits_per_symbol]: Must be between 1-8, inclusive.\n\t <H_I>: Initial entropy estimate.\n\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n\t -s <simulation count>: Establish cutoff using <simulation count> rounds.\n\t -v: Optional verbosity flag for more output.\n\t -q: Quiet mode, less output to screen.\n\n\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'\n\t bits constitute the sample.\n\n\t This program performs restart testing as described in Restart Tests (Section 3.1.4). The data\n\t consists of 1000 restarts, each with 1000 samples. The data is converted to rows and columns\n\t as described Section 3.1.4.1. The sanity check (Section 3.1.4.3) and the validation test\n\t (Section 3.1.4.2) are performed on this data.\n\n\t If the restart data passes the sanity check and validation test, this program returns\n\t min(H_r, H_c, H_I), which is either the validated entropy assessment or used to derive\n\t 'h_in' if conditioning is used (Section 3.1.5).\n\n\t --version: Prints tool version information",
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-restart/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-restart/stderr.txt"
+        }
+      ]
+    },
+    {
+      "suite": "practrand",
+      "status": "passed",
+      "duration_seconds": 11.87113,
+      "metrics_total": 1,
+      "metrics_passed": 1,
+      "metrics_failed": 0,
+      "failed_metrics": [],
+      "warnings": [],
+      "error": null,
+      "artifacts": [
+        {
+          "kind": "stdout",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/practrand/stdout.txt"
+        },
+        {
+          "kind": "stderr",
+          "path": "/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/practrand/stderr.txt"
+        }
+      ]
+    }
+  ]
+}

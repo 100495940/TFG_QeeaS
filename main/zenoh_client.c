@@ -1,5 +1,6 @@
 #define ZENOH_ZEPHYR 1
 #include <errno.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -356,6 +357,11 @@ static int probar_conexion_tcp_host(void) {
     return 0;
 }
 
+// Función auxiliar para ver si el endpoint a usar es TLS o TCP
+static bool endpoint_usa_tls(const char *endpoint) {
+    return endpoint != NULL && strncmp(endpoint, "tls/", 4) == 0;
+}
+
 // Hilo principal de Zenoh
 void zenoh_client_thread(void) {
     LOG_INF("Iniciando Zenoh-Pico en el ESP32-C6");
@@ -371,7 +377,11 @@ void zenoh_client_thread(void) {
     LOG_INF("Abriendo sesión de red");
     LOG_INF("Endpoint Zenoh configurado: %s", CONFIG_ZENOH_ENDPOINT);
 
-    probar_conexion_tcp_host();
+    if (!endpoint_usa_tls(CONFIG_ZENOH_ENDPOINT)) {
+        probar_conexion_tcp_host();
+    } else {
+        LOG_INF("Endpoint TLS detectado; se omite prueba TCP auxiliar previa");
+    }
 
     if (zp_config_insert(z_config_loan_mut(&config), Z_CONFIG_MODE_KEY, Z_CONFIG_MODE_CLIENT) < 0) {
         LOG_ERR("Error configurando Zenoh en modo cliente");
@@ -383,11 +393,37 @@ void zenoh_client_thread(void) {
         return;
     }
 
+    // Configuración TLS para zenoh-pico
+    // La ESP32 necesita conocer la CA que firma el certificado del router Zenoh
+    if (endpoint_usa_tls(CONFIG_ZENOH_ENDPOINT)) {
+        LOG_INF("Endpoint Zenoh TLS detectado");
+
+        if (strlen(CONFIG_QEAAS_TLS_CA_BASE64) == 0) {
+            LOG_ERR("CONFIG_QEAAS_TLS_CA_BASE64 está vacío");
+            LOG_ERR("No se puede validar el certificado TLS del router Zenoh");
+            return;
+        }
+
+        LOG_INF("Longitud CA TLS Base64: %zu",
+                strlen(CONFIG_QEAAS_TLS_CA_BASE64));
+
+        if (zp_config_insert(z_config_loan_mut(&config),
+                            Z_CONFIG_TLS_ROOT_CA_CERTIFICATE_BASE64_KEY,
+                            CONFIG_QEAAS_TLS_CA_BASE64) < 0) {
+            LOG_ERR("Error configurando la CA TLS en Base64 para Zenoh-Pico");
+            return;
+        }
+
+        LOG_INF("CA TLS configurada correctamente para validar el router Zenoh");
+    }
+
     z_result_t open_result = z_open(&session, z_move(config), NULL);
     if (open_result < 0) {
         LOG_ERR("Fallo al abrir la sesión de Zenoh-Pico: %d. No se pudo conectar al router Zenoh en %s", open_result, CONFIG_ZENOH_ENDPOINT);
         return;
     }
+
+    LOG_INF("Sesión Zenoh-Pico abierta correctamente");
 
     // Crear el publicador para enviar el estado al servidor Rust
     z_view_keyexpr_t key_pub;

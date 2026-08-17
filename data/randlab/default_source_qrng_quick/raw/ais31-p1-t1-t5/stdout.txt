@@ -1,0 +1,2 @@
+p1-t1-t5: passed; outcomes 5/5 passed; consumed 652500 of 1052896 bytes; remainder 400396 bytes; rest /workspaces/TFG_QeeaS/data/captures/default/entropy_source_qrng.bin_rest
+json: /workspaces/TFG_QeeaS/data/randlab/default_source_qrng_quick/raw/ais31-p1-t1-t5/ais31-result.json

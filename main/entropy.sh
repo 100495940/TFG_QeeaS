@@ -60,6 +60,44 @@ if [ -f "secrets.conf" ]; then
     EXTRA_ARGS="$EXTRA_ARGS -DOVERLAY_CONFIG=secrets.conf"
 fi
 
+ZENOH_ENDPOINT="$(grep -E '^CONFIG_ZENOH_ENDPOINT=' "secrets.conf" \
+    | sed -E 's/^CONFIG_ZENOH_ENDPOINT="([^"]+)"/\1/' || true)"
+
+if [ -z "$ZENOH_ENDPOINT" ]; then
+    echo "[ERROR] No se ha encontrado CONFIG_ZENOH_ENDPOINT en secrets.conf"
+    exit 1
+fi
+
+case "$ZENOH_ENDPOINT" in
+    tcp/*)
+        QEEAS_SECURITY_MODE="plain"
+        ;;
+    tls/*)
+        QEEAS_SECURITY_MODE="tls"
+        ;;
+    *)
+        echo "[ERROR] Protocolo Zenoh no soportado en CONFIG_ZENOH_ENDPOINT:"
+        echo "        $ZENOH_ENDPOINT"
+        echo "Usa tcp/IP:7447 o tls/IP:7447"
+        exit 1
+        ;;
+esac
+
+ZENOH_TLS_ROUTER_CONFIG="config/zenoh/zenohd_tls.json5"
+ZENOH_TLS_RUST_CONFIG="config/zenoh/rust_client_tls.json5"
+
+ZENOH_HOST_IP="$(echo "$ZENOH_ENDPOINT" | sed -E 's#^[a-zA-Z0-9]+/([^:]+):[0-9]+$#\1#')"
+ZENOH_PORT="$(echo "$ZENOH_ENDPOINT" | sed -E 's#^[a-zA-Z0-9]+/[^:]+:([0-9]+)$#\1#')"
+
+echo "============================================================"
+echo " CONFIGURACION ZENOH"
+echo "============================================================"
+echo "Endpoint      : $ZENOH_ENDPOINT"
+echo "Security mode : $QEEAS_SECURITY_MODE"
+echo "Host IP: $ZENOH_HOST_IP"
+echo "Puerto: $ZENOH_PORT"
+echo "============================================================"
+
 echo "[INFO] Configuración seleccionada: $NOMBRE_MODO"
 echo ""
 
@@ -173,7 +211,42 @@ if [ "$MODO_NIST" = false ]; then
         exit 1
     fi
 
-    zenohd --cfg='listen/endpoints:["tcp/0.0.0.0:7447"]' > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
+    if [ "$QEEAS_SECURITY_MODE" = "tls" ]; then
+        echo "[TLS] Modo TLS solicitado. Comprobando/generando certificados..."
+
+        ZENOH_HOST_IP="$ZENOH_HOST_IP" bash "scripts/generate_tls_certs.sh" > "$QEEAS_LOG_DIR/generate_tls.log" 2>&1
+
+        if [ -z "${ZENOH_HOST_IP:-}" ]; then
+            echo "[ERROR] ZENOH_HOST_IP no está definido."
+            echo "[ERROR] Es necesario para generar el certificado TLS del router."
+            echo
+            echo "Ejemplo:"
+            echo "  ZENOH_HOST_IP=192.168.1.129 bash main/entropy.sh"
+            exit 1
+        fi
+
+        if [ ! -f "$ZENOH_TLS_ROUTER_CONFIG" ]; then
+            echo "[ERROR] Modo TLS solicitado, pero no existe:"
+            echo "        $ZENOH_TLS_ROUTER_CONFIG"
+            echo
+            echo "[ERROR] Revisa el log:"
+            echo "        $QEEAS_LOG_DIR/generate_tls.log"
+            echo
+            echo "[INFO] Genera certificados primero:"
+            echo "  ZENOH_HOST_IP=<IP> bash scripts/generate_tls_certs.sh"
+            exit 1
+        fi
+
+        echo "[ZENOH] Modo TLS activo"
+        echo "[ZENOH] Config TLS: $ZENOH_TLS_ROUTER_CONFIG"
+
+        zenohd --config "$ZENOH_TLS_ROUTER_CONFIG" > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
+    else
+        echo "[ZENOH] Modo plain/TCP activo"
+
+        zenohd --cfg='listen/endpoints:["tcp/0.0.0.0:7447"]' > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
+    fi
+
     ZENOH_ROUTER_PID=$!
     echo "[INFO] Router Zenoh zenohd iniciado con PID: $ZENOH_ROUTER_PID"
     echo "[INFO] Puedes revisar los logs del router en: $QEEAS_LOG_DIR/zenoh_router.log"
@@ -207,7 +280,26 @@ if [ "$MODO_NIST" = false ]; then
     fi
 
     echo "[INFO] Lanzando servidor Rust ya compilado..."
-    bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+    
+    if [ "$QEEAS_SECURITY_MODE" = "tls" ]; then
+        if [ ! -f "$ZENOH_TLS_RUST_CONFIG" ]; then
+            echo "[ERROR] Modo TLS solicitado, pero no existe:"
+            echo "        $ZENOH_TLS_RUST_CONFIG"
+            echo
+            echo "[ERROR] Genera certificados primero:"
+            echo "        ZENOH_HOST_IP=<IP> bash scripts/generate_tls_certs.sh"
+            exit 1
+        fi
+
+        echo "[RUST] Modo TLS activo"
+        echo "[RUST] ZENOH_CONFIG=$ZENOH_TLS_RUST_CONFIG"
+
+        ZENOH_CONFIG="$ZENOH_TLS_RUST_CONFIG" bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+    else
+        echo "[RUST] Modo plain/TCP activo"
+
+        bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+    fi
 
     RUST_SERVER_PID=$!
 
