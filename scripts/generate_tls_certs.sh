@@ -212,7 +212,7 @@ cat > "$RUST_CLIENT_CONFIG" <<EOF
 
   connect: {
     endpoints: [
-      "tls/${ZENOH_HOST_IP}:${ZENOH_TLS_PORT}"
+      "tls/127.0.0.1:${ZENOH_TLS_PORT}"
     ]
   },
 

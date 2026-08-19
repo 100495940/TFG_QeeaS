@@ -138,6 +138,8 @@ static int publicar_bytes_zenoh(const z_loaned_session_t *session,
 
 // Función que se ejecuta cuando recibe mensaje en el tópico de entropía
 static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
+    LOG_INF("CALLBACK QRNG INVOCADO");
+
     ARG_UNUSED(arg);
 
     const z_loaned_bytes_t *payload = z_sample_payload(sample);
@@ -149,12 +151,13 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
         return;
     }
 
+    // Crear los distintos buffers de entropía
     uint8_t qrng_buffer[BLOCK_SIZE];
     uint8_t trng_buffer[BLOCK_SIZE];
     uint8_t final_entropy_buffer[BLOCK_SIZE];
     uint8_t xor_entropy_buffer[BLOCK_SIZE];
 
-    // Recibir entropía cuántica del servidor
+    // Recibir entropía cuántica del servidor en el buffer del qrng
     z_bytes_reader_t reader = z_bytes_get_reader(payload);
     size_t read_bytes = z_bytes_reader_read(&reader, qrng_buffer, BLOCK_SIZE);
 
@@ -425,6 +428,24 @@ void zenoh_client_thread(void) {
 
     LOG_INF("Sesión Zenoh-Pico abierta correctamente");
 
+    LOG_INF("Arrancando tareas internas de Zenoh-Pico");
+
+    // Mantener activo procesamiento de mensajes
+    int ret_read = zp_start_read_task(z_loan_mut(session), NULL);
+    if (ret_read < 0) {
+        LOG_ERR("No se pudo iniciar read task de Zenoh-Pico: %d", ret_read);
+        return;
+    }
+
+    // Enviar keepalive al router zenohd cuando sea necesario
+    int ret_lease = zp_start_lease_task(z_loan_mut(session), NULL);
+    if (ret_lease < 0) {
+        LOG_ERR("No se pudo iniciar lease task de Zenoh-Pico: %d", ret_lease);
+        return;
+    }
+
+    LOG_INF("Read task y lease task iniciadas correctamente");
+
     // Crear el publicador para enviar el estado al servidor Rust
     z_view_keyexpr_t key_pub;
     if (z_view_keyexpr_from_str(&key_pub, STATUS_TOPIC) < 0) {
@@ -457,7 +478,10 @@ void zenoh_client_thread(void) {
 
     LOG_INF("Cliente Zenoh-Pico activo. Escuchando en %s y publicando en %s", QRNG_TOPIC, STATUS_TOPIC);
 
+    uint32_t counter = 0;
+
     while(1) {
-        k_msleep(100);
+        LOG_INF("ESP32 viva. Esperando QRNG... contador=%u", counter++);
+        k_sleep(K_SECONDS(10));
     }
 }

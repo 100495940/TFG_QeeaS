@@ -207,8 +207,7 @@ if [ "$MODO_NIST" = false ]; then
 
     if ! command -v zenohd >/dev/null 2>&1; then
         echo "[ERROR] Zenohd no se encuentra instalado dentro del devcontainer"
-        echo "[ERROR] Instálalo en el Dockerfile o en .devcontainer/setup.sh"
-        exit 1
+        bash scripts/install_zenoh.sh
     fi
 
     if [ "$QEEAS_SECURITY_MODE" = "tls" ]; then
@@ -240,7 +239,7 @@ if [ "$MODO_NIST" = false ]; then
         echo "[ZENOH] Modo TLS activo"
         echo "[ZENOH] Config TLS: $ZENOH_TLS_ROUTER_CONFIG"
 
-        zenohd --config "$ZENOH_TLS_ROUTER_CONFIG" > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
+        RUST_LOG=debug zenohd --config "$ZENOH_TLS_ROUTER_CONFIG" > "$QEEAS_LOG_DIR/zenoh_router.log" 2>&1 &
     else
         echo "[ZENOH] Modo plain/TCP activo"
 
@@ -294,10 +293,13 @@ if [ "$MODO_NIST" = false ]; then
         echo "[RUST] Modo TLS activo"
         echo "[RUST] ZENOH_CONFIG=$ZENOH_TLS_RUST_CONFIG"
 
-        ZENOH_CONFIG="$ZENOH_TLS_RUST_CONFIG" bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
+        ENTROPY_EXPERIMENT="$(date +'%H_%M_%d_%m_%Y')" \
+        ZENOH_CONFIG="$ZENOH_TLS_RUST_CONFIG" \
+        bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
     else
         echo "[RUST] Modo plain/TCP activo"
 
+        ENTROPY_EXPERIMENT="$(date +'%H_%M_%d_%m_%Y')" \
         bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
     fi
 

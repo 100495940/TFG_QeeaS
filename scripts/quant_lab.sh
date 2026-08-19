@@ -41,7 +41,7 @@ fi
 
 if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD=(docker compose)
-elif docker-compose version >/dev/null 2&1; then
+elif docker-compose version >/dev/null 2>&1; then
     COMPOSE_CMD=(docker-compose)
 else
     echo "[QRNG][ERROR] No se encontró docker compose ni docker-compose."
@@ -66,7 +66,8 @@ fi
 
 # Levantar los servicios en modo detached para no bloquear la terminal
 echo "[QRNG] Levantando contenedores QEaaS..."
-"${COMPOSE_CMD[@]}" up --build -d qrng-api nginx-proxy
+#"${COMPOSE_CMD[@]}" up --build -d qrng-api nginx-proxy
+"${COMPOSE_CMD[@]}" up --build -d qrng-api
 #"${COMPOSE_CMD[@]}" \
 #    -f docker-compose.yaml \
 #    -f "$QEAAS_COMPOSE_OVERRIDE" \

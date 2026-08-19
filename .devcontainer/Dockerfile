@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libmbedtls-dev \
     minicom \
     netcat-openbsd \
-    pkconfig \
+    pkg-config \
     python3-pip \
     unzip \
     && rm -rf /var/lib/apt/lists/*
