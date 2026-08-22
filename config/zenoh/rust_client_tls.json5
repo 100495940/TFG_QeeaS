@@ -1,0 +1,17 @@
+{
+  mode: "client",
+
+  connect: {
+    endpoints: [
+      "tls/127.0.0.1:7447"
+    ]
+  },
+
+  transport: {
+    link: {
+      tls: {
+        root_ca_certificate: "/workspaces/TFG_QeeaS/certs/ca/ca.crt"
+      }
+    }
+  }
+}

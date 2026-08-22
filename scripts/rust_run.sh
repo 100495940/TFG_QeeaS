@@ -20,6 +20,13 @@ fi
 echo "[RUST-RUN] Perfil: $RUST_PROFILE"
 echo "[RUST-RUN] Binario: $BINARY"
 
+if [ -n "${ZENOH_CONFIG:-}" ]; then
+    echo "[RUST-RUN] ZENOH_CONFIG activo:"
+    echo "[RUST-RUN]   $ZENOH_CONFIG"
+else
+    echo "[RUST-RUN] ZENOH_CONFIG no definido. Se usará configuración por defecto del binario."
+fi
+
 if [ ! -x "$BINARY" ]; then
     echo "[RUST-RUN][ERROR] No existe el binario o no es ejecutable:"
     echo "$BINARY"

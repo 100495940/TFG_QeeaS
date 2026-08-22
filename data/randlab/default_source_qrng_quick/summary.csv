@@ -1,0 +1,38 @@
+suite,status,metric,value,unit,passed,details
+ais31-p1-t0,passed,ais31_outcomes_passed,1,count,True,"{""outcome_count"": 1, ""failed_tests"": []}"
+ais31-p1-t0,passed,ais31_consumed_bytes,393216,bytes,,"{""required_bits"": 3145728, ""untested_remainder_bytes"": 659680}"
+ais31-p1-t0,passed,T0,True,outcome,True,"{""message"": ""Test T0 bestanden."", ""measurements"": []}"
+ais31-p1-t1-t5,passed,ais31_outcomes_passed,5,count,True,"{""outcome_count"": 5, ""failed_tests"": []}"
+ais31-p1-t1-t5,passed,ais31_consumed_bytes,652500,bytes,,"{""required_bits"": 5220000, ""untested_remainder_bytes"": 400396}"
+ais31-p1-t1-t5,passed,T1,True,outcome,True,"{""message"": ""Test T1 bestanden."", ""_truncated"": true, ""_full_details"": ""manifest.json"", ""_original_json_bytes"": 19847}"
+ais31-p1-t1-t5,passed,T2,True,outcome,True,"{""message"": ""Test T2 bestanden."", ""_truncated"": true, ""_full_details"": ""manifest.json"", ""_original_json_bytes"": 13167}"
+ais31-p1-t1-t5,passed,T3,True,outcome,True,"{""message"": ""Test T3 bestanden."", ""_truncated"": true, ""_full_details"": ""manifest.json"", ""_original_json_bytes"": 202459}"
+ais31-p1-t1-t5,passed,T4,True,outcome,True,"{""message"": ""Test T4 bestanden."", ""_truncated"": true, ""_full_details"": ""manifest.json"", ""_original_json_bytes"": 3541}"
+ais31-p1-t1-t5,passed,T5,True,outcome,True,"{""message"": ""Test T5 bestanden."", ""_truncated"": true, ""_full_details"": ""manifest.json"", ""_original_json_bytes"": 30717}"
+ais31-p2,passed,ais31_outcomes_passed,5,count,True,"{""outcome_count"": 5, ""failed_tests"": []}"
+ais31-p2,passed,ais31_consumed_bytes,900000,bytes,,"{""required_bits"": 7200000, ""untested_remainder_bytes"": 152896}"
+ais31-p2,passed,T6a,True,outcome,True,"{""message"": ""Testprozedur T6a bestanden."", ""measurements"": [{""abs_p1_minus_0_5"": 0.0018299999999999983, ""last_element"": 100000}]}"
+ais31-p2,passed,T6b,True,outcome,True,"{""message"": ""Testprozedur T6b bestanden."", ""measurements"": [{""p_01"": 0.50236, ""p_11"": 0.49994, ""abs_p_01_minus_p_11"": 0.0024200000000000332, ""last_element"": 501868}]}"
+ais31-p2,passed,T7a,True,outcome,True,"{""message"": ""Testprozedur T7a bestanden."", ""measurements"": [{""test_statistics"": [{""index"": 0, ""value"": 2.7380011926733197}, {""index"": 1, ""value"": 1.5680059013470102}], ""last_element"": 1705750}]}"
+ais31-p2,passed,T7b,True,outcome,True,"{""message"": ""Testprozedur T7b bestanden."", ""measurements"": [{""test_statistics"": [{""index"": 0, ""value"": 3.9605388010025795}, {""index"": 1, ""value"": 0.008000011907217722}, {""index"": 2, ""value"": 2.164862102454655}, {""index"": 3, ""value"": 2.534745632361733}], ""last_element"": 4915490}]}"
+ais31-p2,passed,T8,True,outcome,True,"{""message"": ""Test T8 bestanden."", ""measurements"": [{""test_statistic"": 7.998397641426139, ""last_element"": 6983970}]}"
+ent,passed,entropy,7.999824,bits_per_byte,,{}
+ent,passed,file_bytes,1052896,bytes,,{}
+ent,passed,optimum_compression_reduction,0.0,percent,,{}
+ent,passed,chi_square_samples,1052896,samples,,{}
+ent,passed,chi_square,257.12,,True,{}
+ent,passed,chi_square_exceed_percent,45.11,percent,True,"{""qualifier"": """", ""level"": ""passed""}"
+ent,passed,arithmetic_mean,127.4431,,,{}
+ent,passed,monte_carlo_pi,3.14199747,,,{}
+ent,passed,monte_carlo_pi_error,0.01,percent,,{}
+ent,passed,serial_correlation,-0.000359,,,{}
+entropy-iid,passed,H_original,7.877868,bits,,{}
+entropy-iid,passed,H_bitstring,0.998438,bits,,{}
+entropy-iid,passed,"min(H_original, 8 X H_bitstring)",7.877868,bits,,{}
+entropy-non-iid,passed,H_original,7.353758,bits,,{}
+entropy-non-iid,passed,H_bitstring,0.918491,bits,,{}
+entropy-non-iid,passed,"min(H_original, 8 X H_bitstring)",7.347928,bits,,{}
+entropy-restart,passed,H_r,7.877868,bits,,{}
+entropy-restart,passed,H_c,7.877868,bits,,{}
+entropy-restart,passed,"min(H_r, H_c, H_I)",7.877868,bits,,{}
+practrand,passed,total_tests_at_final_checkpoint,102,tests,True,{}

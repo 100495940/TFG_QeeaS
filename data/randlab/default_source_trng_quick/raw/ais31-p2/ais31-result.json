@@ -1,0 +1,186 @@
+{
+  "created_at": "2026-08-15T20:08:04.019317+00:00",
+  "suite": "p2",
+  "status": "passed",
+  "passed": true,
+  "summary": {
+    "status": "passed",
+    "passed": true,
+    "outcome_count": 5,
+    "passed_count": 5,
+    "failed_count": 0,
+    "failed_tests": [],
+    "consumed_bytes": 900000,
+    "input_size_bytes": 1052832,
+    "untested_remainder_bytes": 152832,
+    "rest_files": [
+      "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest"
+    ],
+    "warning_count": 0
+  },
+  "input": {
+    "path": "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin",
+    "format": "raw",
+    "size_bytes": 1052832,
+    "required_bits": 7200000,
+    "required_bytes": 900000,
+    "consumed_bits": 7200000,
+    "consumed_bytes": 900000,
+    "untested_remainder_bytes": 152832
+  },
+  "configuration": {
+    "bit_width": 8,
+    "mode": "normal"
+  },
+  "command": [
+    "java",
+    "-Djava.awt.headless=true",
+    "-cp",
+    "/workspaces/TFG_QeeaS/.randlab/tools/ais31-state/build",
+    "HeadlessAIS31",
+    "--input",
+    "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin",
+    "--format",
+    "raw",
+    "--suite",
+    "p2",
+    "--bit-width",
+    "8",
+    "--mode",
+    "normal"
+  ],
+  "outcomes": [
+    {
+      "name": "T6a",
+      "passed": true,
+      "message": "Testprozedur T6a bestanden.",
+      "measurements": [
+        {
+          "abs_p1_minus_0_5": 0.0014199999999999768,
+          "last_element": 100000
+        }
+      ]
+    },
+    {
+      "name": "T6b",
+      "passed": true,
+      "message": "Testprozedur T6b bestanden.",
+      "measurements": [
+        {
+          "p_01": 0.50361,
+          "p_11": 0.4987,
+          "abs_p_01_minus_p_11": 0.0049100000000000255,
+          "last_element": 500648
+        }
+      ]
+    },
+    {
+      "name": "T7a",
+      "passed": true,
+      "message": "Testprozedur T7a bestanden.",
+      "measurements": [
+        {
+          "test_statistics": [
+            {
+              "index": 0,
+              "value": 1.1139205774564274
+            },
+            {
+              "index": 1,
+              "value": 0.6993801679211784
+            }
+          ],
+          "last_element": 1705952
+        }
+      ]
+    },
+    {
+      "name": "T7b",
+      "passed": true,
+      "message": "Testprozedur T7b bestanden.",
+      "measurements": [
+        {
+          "test_statistics": [
+            {
+              "index": 0,
+              "value": 0.13122021164507935
+            },
+            {
+              "index": 1,
+              "value": 0.7220045125282033
+            },
+            {
+              "index": 2,
+              "value": 3.1047209736404975
+            },
+            {
+              "index": 3,
+              "value": 0.030420455604121537
+            }
+          ],
+          "last_element": 4922968
+        }
+      ]
+    },
+    {
+      "name": "T8",
+      "passed": true,
+      "message": "Test T8 bestanden.",
+      "measurements": [
+        {
+          "test_statistic": 8.001381915434996,
+          "last_element": 6991448
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "kind": "rest-file",
+      "path": "/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest"
+    }
+  ],
+  "log": [
+    "TEST-SUITE:\tP2 (spezifische Tests)",
+    "DATEINAME:\t/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin",
+    "AUSGABEDETAILS:\tEingeschaltet.",
+    "DATENFORMAT:\t1 Dateibyte enthält 8 Random-Bits.",
+    "TESTART:\tNormaler Test.",
+    "RND-BITBREITE:\t8 bit.",
+    "  Datei wird eingelesen.",
+    "    Kopiere BitStream-Datei in RAM ...",
+    "    Konvertiere Dateidaten in ByteStream ...",
+    "    Schreibe Restdatei: /workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest",
+    "    7200000 Elemente in RAM kopiert.",
+    "  Datei wurde eingelesen.",
+    "  Testprozedur T6a zur Verifikation von P2.i)(vii.a) gestartet.",
+    "    |P(1) - 0.5| = 0.0014199999999999768",
+    "    Letztes Element: 100000",
+    "  Testprozedur T6a bestanden.",
+    "  Testprozedur T6b zur Verifikation von P2.i)(vii.b) gestartet.",
+    "    p(01) = 0.50361",
+    "    p(11) = 0.4987",
+    "    |p_(01) - p_(11)| = 0.0049100000000000255",
+    "    Letztes Element: 500648",
+    "  Testprozedur T6b bestanden.",
+    "  Testprozedur T7a zur Verifikation von P2.i)(vii.c) gestartet.",
+    "    Testgröße[0] = 1.1139205774564274",
+    "    Testgröße[1] = 0.6993801679211784",
+    "    Letztes Element: 1705952",
+    "  Testprozedur T7a bestanden.",
+    "  Testprozedur T7b zur Verifikation von P2.i)(vii.d) gestartet.",
+    "    Testgröße[0] = 0.13122021164507935",
+    "    Testgröße[1] = 0.7220045125282033",
+    "    Testgröße[2] = 3.1047209736404975",
+    "    Testgröße[3] = 0.030420455604121537",
+    "    Letztes Element: 4922968",
+    "  Testprozedur T7b bestanden.",
+    "  Test T8 zur Verifikation von P2.i)(vii.e) gestartet.",
+    "    Testgröße = 8.001381915434996",
+    "    Letztes Element: 6991448",
+    "  Test T8 bestanden."
+  ],
+  "stdout": "AIS31_HEADLESS_RESULT passed\nAIS31_HEADLESS_SUITE p2\nAIS31_HEADLESS_INPUT /workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin\nAIS31_HEADLESS_FORMAT raw\nAIS31_HEADLESS_BIT_WIDTH 8\nAIS31_HEADLESS_MODE normal\nAIS31_HEADLESS_LOG_BEGIN\nTEST-SUITE:\tP2 (spezifische Tests)\nDATEINAME:\t/workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin\nAUSGABEDETAILS:\tEingeschaltet.\nDATENFORMAT:\t1 Dateibyte enthält 8 Random-Bits.\nTESTART:\tNormaler Test.\nRND-BITBREITE:\t8 bit.\n  Datei wird eingelesen.\n    Kopiere BitStream-Datei in RAM ...\n    Konvertiere Dateidaten in ByteStream ...\n    Schreibe Restdatei: /workspaces/TFG_QeeaS/data/captures/default_backup2/entropy_source_trng.bin_rest\n    7200000 Elemente in RAM kopiert.\n  Datei wurde eingelesen.\n  Testprozedur T6a zur Verifikation von P2.i)(vii.a) gestartet.\n    |P(1) - 0.5| = 0.0014199999999999768\n    Letztes Element: 100000\n  Testprozedur T6a bestanden.\n  Testprozedur T6b zur Verifikation von P2.i)(vii.b) gestartet.\n    p(01) = 0.50361\n    p(11) = 0.4987\n    |p_(01) - p_(11)| = 0.0049100000000000255\n    Letztes Element: 500648\n  Testprozedur T6b bestanden.\n  Testprozedur T7a zur Verifikation von P2.i)(vii.c) gestartet.\n    Testgröße[0] = 1.1139205774564274\n    Testgröße[1] = 0.6993801679211784\n    Letztes Element: 1705952\n  Testprozedur T7a bestanden.\n  Testprozedur T7b zur Verifikation von P2.i)(vii.d) gestartet.\n    Testgröße[0] = 0.13122021164507935\n    Testgröße[1] = 0.7220045125282033\n    Testgröße[2] = 3.1047209736404975\n    Testgröße[3] = 0.030420455604121537\n    Letztes Element: 4922968\n  Testprozedur T7b bestanden.\n  Test T8 zur Verifikation von P2.i)(vii.e) gestartet.\n    Testgröße = 8.001381915434996\n    Letztes Element: 6991448\n  Test T8 bestanden.\nAIS31_HEADLESS_LOG_END\n",
+  "stderr": "",
+  "warnings": []
+}

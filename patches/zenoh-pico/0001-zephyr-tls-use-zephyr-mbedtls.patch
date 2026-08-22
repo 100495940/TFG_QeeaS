@@ -1,0 +1,660 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6b4b868e..d130540e 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -405,65 +405,82 @@ endif()
+ 
+ # TLS support via Mbed TLS
+ if(Z_FEATURE_LINK_TLS)
+-  find_package(PkgConfig REQUIRED)
+-
+-  # Prefer Mbed TLS 3.x, fall back to 2.x
+-  # Never accept 4.x or newer
+-  #
+-  pkg_search_module(MBEDTLS REQUIRED
+-    mbedtls-3>=3.0.0
+-    mbedtls>=3.0.0
+-    mbedtls>=2.0.0
+-  )
+-  if(NOT MBEDTLS_VERSION VERSION_LESS "4.0.0")
+-    message(FATAL_ERROR
+-      "Mbed TLS ${MBEDTLS_VERSION} is not supported. "
+-      "Please install Mbed TLS 2.x or 3.x.")
+-  endif()
+-  message(STATUS "Using Mbed TLS ${MBEDTLS_VERSION}")
+-
+-  pkg_search_module(MBEDX509 OPTIONAL
+-    mbedx509-3>=3.0.0
+-    mbedx509>=3.0.0
+-    mbedx509>=2.0.0)
+-
+-  pkg_search_module(MBEDCRYPTO OPTIONAL
+-    mbedcrypto-3>=3.0.0
+-    mbedcrypto>=3.0.0
+-    mbedcrypto>=2.0.0)
+-
+-  set(MBEDTLS_LINK_LIBRARIES
+-    ${MBEDTLS_LIBRARIES}
+-  )
+-
+-  if(MBEDX509_FOUND)
+-    if(MBEDX509_VERSION AND NOT MBEDX509_VERSION VERSION_EQUAL MBEDTLS_VERSION)
+-      message(FATAL_ERROR
+-        "mbedtls (${MBEDTLS_VERSION}) and mbedx509 (${MBEDX509_VERSION}) "
+-        "versions do not match.")
+-    endif()
+-    list(APPEND MBEDTLS_LINK_LIBRARIES ${MBEDX509_LIBRARIES})
+-  endif()
++  if(DEFINED ZP_PLATFORM AND ZP_PLATFORM STREQUAL "zephyr")
++        message(STATUS "Using Zephyr-provided Mbed TLS for zenoh-pico TLS")
++        message(STATUS "Skipping pkg-config lookup for Mbed TLS because target platform is Zephyr")
++
++        # En Zephyr no se debe buscar Mbed TLS mediante pkg-config.
++        # pkg-config resolvería las cabeceras y librerías del sistema Linux
++        # del contenedor (/usr/include, /usr/lib), lo que contamina la
++        # compilación cruzada para ESP32-C6.
++        #
++        # El soporte TLS debe venir del propio Zephyr mediante Kconfig:
++        #   CONFIG_MBEDTLS=y
++        #   CONFIG_NET_SOCKETS_SOCKOPT_TLS=y
++        #   CONFIG_TLS_CREDENTIALS=y
+ 
+-  if(MBEDCRYPTO_FOUND)
+-    if(MBEDCRYPTO_VERSION AND NOT MBEDCRYPTO_VERSION VERSION_EQUAL MBEDTLS_VERSION)
+-      message(FATAL_ERROR
+-        "mbedtls (${MBEDTLS_VERSION}) and mbedcrypto (${MBEDCRYPTO_VERSION}) "
+-        "versions do not match.")
+-    endif()
+-    list(APPEND MBEDTLS_LINK_LIBRARIES ${MBEDCRYPTO_LIBRARIES})
+-  endif()
++    else()
++      find_package(PkgConfig REQUIRED)
++
++      # Prefer Mbed TLS 3.x, fall back to 2.x
++      # Never accept 4.x or newer
++      #
++      pkg_search_module(MBEDTLS REQUIRED
++        mbedtls-3>=3.0.0
++        mbedtls>=3.0.0
++        mbedtls>=2.0.0
++      )
++      if(NOT MBEDTLS_VERSION VERSION_LESS "4.0.0")
++        message(FATAL_ERROR
++          "Mbed TLS ${MBEDTLS_VERSION} is not supported. "
++          "Please install Mbed TLS 2.x or 3.x.")
++      endif()
++      message(STATUS "Using Mbed TLS ${MBEDTLS_VERSION}")
++
++      pkg_search_module(MBEDX509 OPTIONAL
++        mbedx509-3>=3.0.0
++        mbedx509>=3.0.0
++        mbedx509>=2.0.0)
++
++      pkg_search_module(MBEDCRYPTO OPTIONAL
++        mbedcrypto-3>=3.0.0
++        mbedcrypto>=3.0.0
++        mbedcrypto>=2.0.0)
++
++      set(MBEDTLS_LINK_LIBRARIES
++        ${MBEDTLS_LIBRARIES}
++      )
++
++      if(MBEDX509_FOUND)
++        if(MBEDX509_VERSION AND NOT MBEDX509_VERSION VERSION_EQUAL MBEDTLS_VERSION)
++          message(FATAL_ERROR
++            "mbedtls (${MBEDTLS_VERSION}) and mbedx509 (${MBEDX509_VERSION}) "
++            "versions do not match.")
++        endif()
++        list(APPEND MBEDTLS_LINK_LIBRARIES ${MBEDX509_LIBRARIES})
++      endif()
+ 
+-  if(PICO_STATIC)
+-    target_include_directories(${Libname}_static PUBLIC ${MBEDTLS_INCLUDE_DIRS})
+-    target_link_directories(${Libname}_static PUBLIC ${MBEDTLS_LIBRARY_DIRS})
+-    target_link_libraries(${Libname}_static PUBLIC ${MBEDTLS_LINK_LIBRARIES})
+-  endif()
+-  if(PICO_SHARED)
+-    target_include_directories(${Libname}_shared PUBLIC ${MBEDTLS_INCLUDE_DIRS})
+-    target_link_directories(${Libname}_shared PUBLIC ${MBEDTLS_LIBRARY_DIRS})
+-    target_link_libraries(${Libname}_shared PUBLIC ${MBEDTLS_LINK_LIBRARIES})
+-  endif()
++      if(MBEDCRYPTO_FOUND)
++        if(MBEDCRYPTO_VERSION AND NOT MBEDCRYPTO_VERSION VERSION_EQUAL MBEDTLS_VERSION)
++          message(FATAL_ERROR
++            "mbedtls (${MBEDTLS_VERSION}) and mbedcrypto (${MBEDCRYPTO_VERSION}) "
++            "versions do not match.")
++        endif()
++        list(APPEND MBEDTLS_LINK_LIBRARIES ${MBEDCRYPTO_LIBRARIES})
++      endif()
++
++      if(PICO_STATIC)
++        target_include_directories(${Libname}_static PUBLIC ${MBEDTLS_INCLUDE_DIRS})
++        target_link_directories(${Libname}_static PUBLIC ${MBEDTLS_LIBRARY_DIRS})
++        target_link_libraries(${Libname}_static PUBLIC ${MBEDTLS_LINK_LIBRARIES})
++      endif()
++
++      if(PICO_SHARED)
++        target_include_directories(${Libname}_shared PUBLIC ${MBEDTLS_INCLUDE_DIRS})
++        target_link_directories(${Libname}_shared PUBLIC ${MBEDTLS_LIBRARY_DIRS})
++        target_link_libraries(${Libname}_shared PUBLIC ${MBEDTLS_LINK_LIBRARIES})
++      endif()
++    endif()
+ endif()
+ 
+ file(GLOB_RECURSE Sources
+diff --git a/include/zenoh-pico.h b/include/zenoh-pico.h
+index fb3d55e7..86b236c2 100644
+--- a/include/zenoh-pico.h
++++ b/include/zenoh-pico.h
+@@ -17,12 +17,13 @@
+ #ifndef ZENOH_PICO_H
+ #define ZENOH_PICO_H
+ 
+-#define ZENOH_PICO "1.5.0"
++#define ZENOH_PICO "1.9.0"
+ #define ZENOH_PICO_MAJOR 1
+-#define ZENOH_PICO_MINOR 5
++#define ZENOH_PICO_MINOR 9
+ #define ZENOH_PICO_PATCH 0
+-#define ZENOH_PICO_TWEAK
++#define ZENOH_PICO_TWEAK 
+ 
++#include "zenoh-pico/api/admin_space.h"
+ #include "zenoh-pico/api/advanced_publisher.h"
+ #include "zenoh-pico/api/advanced_subscriber.h"
+ #include "zenoh-pico/api/constants.h"
+diff --git a/include/zenoh-pico/config.h b/include/zenoh-pico/config.h
+index 41829f74..f38178e2 100644
+--- a/include/zenoh-pico/config.h
++++ b/include/zenoh-pico/config.h
+@@ -20,9 +20,9 @@
+ #else
+ 
+ /*--- CMake generated config; pass values to CMake to change the following tokens ---*/
+-#define Z_FRAG_MAX_SIZE 4096
+-#define Z_BATCH_UNICAST_SIZE 2048
+-#define Z_BATCH_MULTICAST_SIZE 2048
++#define Z_FRAG_MAX_SIZE 16384
++#define Z_BATCH_UNICAST_SIZE 8192
++#define Z_BATCH_MULTICAST_SIZE 8192
+ #define Z_CONFIG_SOCKET_TIMEOUT 100
+ #define Z_TRANSPORT_LEASE 10000
+ #define Z_TRANSPORT_LEASE_EXPIRE_FACTOR 3
+@@ -37,37 +37,36 @@
+ #define Z_FEATURE_ADVANCED_PUBLICATION 0
+ #define Z_FEATURE_SUBSCRIPTION 1
+ #define Z_FEATURE_ADVANCED_SUBSCRIPTION 0
+-#define Z_FEATURE_QUERY 1
+-#define Z_FEATURE_QUERYABLE 1
+-#define Z_FEATURE_LIVELINESS 1
++#define Z_FEATURE_QUERY 0
++#define Z_FEATURE_QUERYABLE 0
++#define Z_FEATURE_LIVELINESS 0
+ #define Z_FEATURE_RAWETH_TRANSPORT 0
+-#define Z_FEATURE_INTEREST 1
++#define Z_FEATURE_INTEREST 0
+ #define Z_FEATURE_LINK_TCP 1
+ #define Z_FEATURE_LINK_BLUETOOTH 0
+ #define Z_FEATURE_LINK_WS 0
+ #define Z_FEATURE_LINK_SERIAL 0
+ #define Z_FEATURE_LINK_SERIAL_USB 0
+-#define Z_FEATURE_LINK_TLS 0
+-#define Z_FEATURE_SCOUTING 1
+-#define Z_FEATURE_LINK_UDP_MULTICAST 1
+-#define Z_FEATURE_LINK_UDP_UNICAST 1
+-#define Z_FEATURE_MULTICAST_TRANSPORT 1
++#define Z_FEATURE_LINK_TLS 1
++#define Z_FEATURE_SCOUTING 0
++#define Z_FEATURE_LINK_UDP_MULTICAST 0
++#define Z_FEATURE_LINK_UDP_UNICAST 0
++#define Z_FEATURE_MULTICAST_TRANSPORT 0
+ #define Z_FEATURE_UNICAST_TRANSPORT 1
+ #define Z_FEATURE_FRAGMENTATION 1
+ #define Z_FEATURE_ENCODING_VALUES 1
+-#define Z_FEATURE_TCP_NODELAY 1
++#define Z_FEATURE_TCP_NODELAY 0
+ #define Z_FEATURE_LOCAL_SUBSCRIBER 0
+ #define Z_FEATURE_LOCAL_QUERYABLE 0
+ #define Z_FEATURE_SESSION_CHECK 1
+ #define Z_FEATURE_BATCHING 1
+ #define Z_FEATURE_BATCH_TX_MUTEX 0
+ #define Z_FEATURE_BATCH_PEER_MUTEX 0
+-#define Z_FEATURE_MATCHING 1
++#define Z_FEATURE_MATCHING 0
+ #define Z_FEATURE_RX_CACHE 0
+ #define Z_FEATURE_UNICAST_PEER 1
+ #define Z_FEATURE_AUTO_RECONNECT 1
+ #define Z_FEATURE_MULTICAST_DECLARATIONS 0
+-#define Z_FEATURE_PERIODIC_TASKS 0
+ #define Z_FEATURE_ADMIN_SPACE 0
+ 
+ // End of CMake generation
+diff --git a/include/zenoh-pico/system/platform/zephyr.h b/include/zenoh-pico/system/platform/zephyr.h
+index 20895a1d..ecbf305a 100644
+--- a/include/zenoh-pico/system/platform/zephyr.h
++++ b/include/zenoh-pico/system/platform/zephyr.h
+@@ -15,7 +15,127 @@
+ #ifndef ZENOH_PICO_SYSTEM_ZEPHYR_TYPES_H
+ #define ZENOH_PICO_SYSTEM_ZEPHYR_TYPES_H
+ 
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
+ #include <version.h>
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
+ 
+ #if KERNEL_VERSION_MAJOR == 2
+ #include <kernel.h>
+diff --git a/library.json b/library.json
+index 59d84849..8a60392b 100644
+--- a/library.json
++++ b/library.json
+@@ -1,6 +1,6 @@
+ {
+     "name": "zenoh-pico",
+-    "version": "1.2.1.0",
++    "version": "1.9.0.",
+     "description": "The Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query and Compute. It unifies data in motion, data in-use, data at rest and computations. It carefully blends traditional pub/sub with geo-distributed storages, queries and computations, while retaining a level of time and space efficiency that is well beyond any of the mainstream stacks. Zenoh-Pico is the implementation able to scale down to extremely constrainded devices and networks.",
+     "keywords": [
+         "pubsub",
+@@ -23,12 +23,9 @@
+     "license": "Apache-2.0 OR EPL-2.0",
+     "frameworks": [
+         "arduino",
+-        "libopencm3",
+-        "stm32cube",
+         "espidf",
+         "mbed",
+-        "zephyr",
+-        "spl"
++        "zephyr"
+     ],
+     "headers": [
+         "zenoh-pico.h"
+@@ -43,4 +40,4 @@
+     "build": {
+         "extraScript": "extra_script.py"
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/system/zephyr/network.c b/src/system/zephyr/network.c
+index 88a4058e..ca20a316 100644
+--- a/src/system/zephyr/network.c
++++ b/src/system/zephyr/network.c
+@@ -12,7 +12,127 @@
+ //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+ //
+ 
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
+ #include <version.h>
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
+ 
+ #if KERNEL_VERSION_MAJOR == 2
+ #include <drivers/uart.h>
+diff --git a/src/system/zephyr/system.c b/src/system/zephyr/system.c
+index f04b0890..d9adee40 100644
+--- a/src/system/zephyr/system.c
++++ b/src/system/zephyr/system.c
+@@ -12,7 +12,127 @@
+ //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+ //
+ 
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
++#if __has_include(<zephyr/version.h>)
++#include <zephyr/version.h>
++#else
+ #include <version.h>
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
++#endif
+ 
+ #if KERNEL_VERSION_MAJOR == 2
+ #include <random/rand32.h>

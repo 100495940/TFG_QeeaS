@@ -6,14 +6,16 @@ USER root
 
 # Instalar herramientas base + dependencias para Zenoh
 RUN apt-get update && apt-get install -y \
-    ent \
-    minicom \
-    python3-pip \
-    curl \
-    gnupg \
     ca-certificates \
+    curl \
+    ent \
+    gnupg \
     iproute2 \
+    libmbedtls-dev \
+    minicom \
     netcat-openbsd \
+    pkg-config \
+    python3-pip \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 

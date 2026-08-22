@@ -5,7 +5,7 @@ echo "=== Configurando dependencias de Python ==="
 pip install -r requirements.txt
 
 echo "=== Verificando instalación de Zenoh ==="
-bash install_zenoh.sh
+bash scripts/install_zenoh.sh
 
 echo "=== Configurando el entorno de Zephyr automáticamente ==="
 

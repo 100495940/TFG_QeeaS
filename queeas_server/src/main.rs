@@ -8,7 +8,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time;
-use zenoh::config::Config;
 
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
 const STATUS_TOPIC: &str = "qeeas/esp32/status";
@@ -18,7 +17,8 @@ const ENTROPY_FINAL_ACTIVE_TOPIC: &str = "qeeas/esp32/entropy/final/active";
 const ENTROPY_FINAL_XOR_TOPIC: &str = "qeeas/esp32/entropy/final/xor";
 const QRNG_BLOCK_SIZE: usize = 32;
 const QEAAS_MAX_BYTES_PER_REQUEST: usize = 8;
-const ZENOH_ROUTER_ENDPOINT: &str = "tcp/127.0.0.1:7447";
+const ZENOH_ROUTER_ENDPOINT_PLAIN: &str = "tcp/127.0.0.1:7447";
+const ZENOH_ROUTER_ENDPOINT_TLS: &str = "tls/127.0.0.1:7447";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum QrngSourceMode {
@@ -241,6 +241,49 @@ fn map_zenoh_error(err: Box<dyn std::error::Error + Send + Sync>) -> anyhow::Err
     anyhow::anyhow!("{}", err)
 }
 
+// Función auxiliar para cargar la configuración de Zenoh (TCP/TLS)
+fn load_zenoh_config() -> anyhow::Result<zenoh::Config> {
+    if let Ok(config_path) = std::env::var("ZENOH_CONFIG") {
+        println!("[ZENOH] Cargando configuracion desde {}", config_path);
+
+        let config = zenoh::Config::from_file(&config_path)
+            .map_err(|err| anyhow::anyhow!(
+                "No se pudo cargar la configuracion Zenoh desde {}: {}",
+                config_path,
+                err
+            ))?;
+
+        return Ok(config);
+    }
+
+    println!(
+        "[ZENOH] ZENOH_CONFIG no definido. Usando endpoint por defecto: {}",
+        ZENOH_ROUTER_ENDPOINT_PLAIN
+    );
+
+    let mut config = zenoh::Config::default();
+
+    config
+        .insert_json5("mode", r#""client""#)
+        .map_err(|err| anyhow::anyhow!(
+            "No se pudo configurar el modo Zenoh client: {}",
+            err
+    ))?;
+
+    config
+        .insert_json5(
+            "connect/endpoints",
+            &format!(r#"["{}"]"#, ZENOH_ROUTER_ENDPOINT_PLAIN),
+        )
+        .map_err(|err| anyhow::anyhow!(
+            "No se pudo configurar endpoint Zenoh por defecto {}: {}",
+            ZENOH_ROUTER_ENDPOINT_PLAIN,
+            err
+    ))?;
+
+    Ok(config)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("QeeaS Rust server arrancando.");
@@ -259,20 +302,7 @@ async fn main() -> Result<()> {
         .build()
         .context("No se pudo crear el cliente HTTP")?;
 
-    let mut config = Config::default();
-
-    config
-        .insert_json5("mode", r#""client""#)
-        .expect("No se pudo configurar el modo cliente");
-
-    config
-        .insert_json5(
-            "connect/endpoints",
-            &format!("[\"{}\"]", ZENOH_ROUTER_ENDPOINT),
-        )
-        .expect("No se pudo configurar el endpoint Zenoh");
-
-    println!("Conectando al router Zenoh en {}", ZENOH_ROUTER_ENDPOINT);
+    let config = load_zenoh_config()?;
 
     let session = zenoh::open(config)
         .await

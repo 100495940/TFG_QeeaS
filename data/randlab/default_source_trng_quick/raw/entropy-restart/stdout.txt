@@ -1,0 +1,26 @@
+Error: '/workspaces/TFG_QeeaS/data/randlab/default_source_trng_quick/raw/entropy-restart/entropy_source_trng.1m.bin' is empty
+Error reading file.
+Usage is: ea_restart [-i|-n] [-v] [-q] [-s <simulation count>] <file_name> [bits_per_symbol] <H_I>
+
+	 <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),
+	 and in the "row dataset" format described in SP800-90B Section 3.1.4.1.
+	 [bits_per_symbol]: Must be between 1-8, inclusive.
+	 <H_I>: Initial entropy estimate.
+	 [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.
+	 -s <simulation count>: Establish cutoff using <simulation count> rounds.
+	 -v: Optional verbosity flag for more output.
+	 -q: Quiet mode, less output to screen.
+
+	 Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'
+	 bits constitute the sample.
+
+	 This program performs restart testing as described in Restart Tests (Section 3.1.4). The data
+	 consists of 1000 restarts, each with 1000 samples. The data is converted to rows and columns
+	 as described Section 3.1.4.1. The sanity check (Section 3.1.4.3) and the validation test
+	 (Section 3.1.4.2) are performed on this data.
+
+	 If the restart data passes the sanity check and validation test, this program returns
+	 min(H_r, H_c, H_I), which is either the validated entropy assessment or used to derive
+	 'h_in' if conditioning is used (Section 3.1.5).
+
+	 --version: Prints tool version information
