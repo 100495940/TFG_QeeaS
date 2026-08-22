@@ -1,3 +1,5 @@
+mod observability;
+
 use anyhow::{Context, Result};
 use rand::RngCore;
 use serde::Deserialize;
@@ -7,6 +9,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use std::time::Instant;
 use tokio::time;
 
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
@@ -288,6 +291,9 @@ fn load_zenoh_config() -> anyhow::Result<zenoh::Config> {
 async fn main() -> Result<()> {
     println!("QeeaS Rust server arrancando.");
 
+    // Iniciar métricas en prometheus
+    observability::init_metrics()?;
+
     let qrng_source_mode = QrngSourceMode::from_env();
 
     let qeaas_api_url = env::var("QEAAS_API_URL")
@@ -387,8 +393,20 @@ async fn main() -> Result<()> {
         .map_err(map_zenoh_error)?;
 
     loop {
+        // Timestamp para métricas prometheus
+        let qrng_start = Instant::now();
+
         let (qrng_block, source_name) =
-            get_qrng_block(qrng_source_mode, &http_client, &qeaas_api_url).await?;
+            get_qrng_block(
+                qrng_source_mode, 
+                &http_client, 
+                &qeaas_api_url
+            ).await?;
+
+        // Calcular tiempo consumido
+        let qrng_duration = qrng_start.elapsed().as_secs_f64();
+
+        observability::record_qrng_fetch_duration(source_name, qrng_duration);
 
         println!(
             "Publicando bloque QRNG [{}]: {}",
@@ -400,6 +418,11 @@ async fn main() -> Result<()> {
             .put(QRNG_TOPIC, qrng_block)
             .await
             .expect("Error publicando bloque QRNG");
+
+        // Incrementar contador bloques prometheus
+        observability::record_qrng_block_published(
+            source_name
+        );
 
         time::sleep(Duration::from_secs(2)).await;
     }

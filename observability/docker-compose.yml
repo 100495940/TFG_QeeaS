@@ -1,0 +1,45 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: qeaas-prometheus
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+    ports:
+      - "9090:9090"
+
+    networks:
+      - qeeas-observability
+
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: qeaas-grafana
+
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - qeeas-observability
+
+    depends_on:
+      - prometheus
+
+    restart: unless-stopped
+
+networks:
+  qeeas-observability:
+    external: true
+
+volumes:
+  prometheus-data:
+  grafana-data:

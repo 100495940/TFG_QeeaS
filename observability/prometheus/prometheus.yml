@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  # Monitorizarse a sí mismo
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090"
+
+  # Monitorizar qeaas
+  - job_name: "qeaas-server"
+
+    static_configs:
+      - targets: 
+        - "qeeas-dev:9091"
