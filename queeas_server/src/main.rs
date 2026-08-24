@@ -393,20 +393,35 @@ async fn main() -> Result<()> {
         .map_err(map_zenoh_error)?;
 
     loop {
+        let source = qrng_source_mode.as_str();
+
+        observability::record_qrng_request(source);
+
         // Timestamp para métricas prometheus
         let qrng_start = Instant::now();
 
-        let (qrng_block, source_name) =
+        let qrng_result =
             get_qrng_block(
                 qrng_source_mode, 
                 &http_client, 
                 &qeaas_api_url
-            ).await?;
+            ).await;
 
-        // Calcular tiempo consumido
+        // Calcular tiempo consumido en llamar a la API
         let qrng_duration = qrng_start.elapsed().as_secs_f64();
 
-        observability::record_qrng_fetch_duration(source_name, qrng_duration);
+        match &qrng_result {
+            Ok(_) => {
+                observability::record_qrng_fetch_duration(source, qrng_duration);
+            }
+
+            Err(_) => {
+                observability::record_qrng_request_errors(source);
+            }
+        }
+
+        let (qrng_block, source_name) = qrng_result?;
+        
 
         println!(
             "Publicando bloque QRNG [{}]: {}",
@@ -414,15 +429,34 @@ async fn main() -> Result<()> {
             hex::encode(&qrng_block)
         );
 
-        session
-            .put(QRNG_TOPIC, qrng_block)
-            .await
-            .expect("Error publicando bloque QRNG");
+        let block_size = qrng_block.len();
 
-        // Incrementar contador bloques prometheus
-        observability::record_qrng_block_published(
-            source_name
-        );
+        let publish_zenoh_start = Instant::now();
+
+        let publish_zenoh_result = session
+            .put(QRNG_TOPIC, qrng_block)
+            .await;
+
+        // Registrar duración de la publicación a la sesión Zenoh
+        let publish_zenoh_duration = publish_zenoh_start.elapsed().as_secs_f64();
+
+        match publish_zenoh_result {
+            Ok(_) => {
+                observability::record_zenoh_publish_duration(publish_zenoh_duration);
+
+                // Incrementar contador bloques prometheus
+                observability::record_qrng_block_published(source_name);
+
+                // Incrementar contador bytes prometheus
+                observability::record_qrng_bytes_published(source_name, block_size);
+            }
+
+            Err(err) => {
+                observability::record_zenoh_publish_error();
+
+                panic!("Error publicando bloque QRNG: {}", err);
+            }
+        }
 
         time::sleep(Duration::from_secs(2)).await;
     }
