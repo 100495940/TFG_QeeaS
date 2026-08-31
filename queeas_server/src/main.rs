@@ -3,6 +3,7 @@ mod observability;
 use anyhow::{Context, Result};
 use rand::RngCore;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::env;
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::Write;
@@ -12,14 +13,21 @@ use std::time::Duration;
 use std::time::Instant;
 use tokio::time;
 
+const ACK_TOPIC: &str = "qeeas/esp32/ack";
 const QRNG_TOPIC: &str = "qeeas/qrng/chunk";
 const STATUS_TOPIC: &str = "qeeas/esp32/status";
 const ENTROPY_SOURCE_TRNG_TOPIC: &str = "qeeas/esp32/entropy/source/trng";
 const ENTROPY_SOURCE_QRNG_TOPIC: &str = "qeeas/esp32/entropy/source/qrng";
 const ENTROPY_FINAL_ACTIVE_TOPIC: &str = "qeeas/esp32/entropy/final/active";
 const ENTROPY_FINAL_XOR_TOPIC: &str = "qeeas/esp32/entropy/final/xor";
+
+const ACK_SIZE: usize = 20;
+const TOTAL_BLOCK_SIZE: usize = 40;
 const QRNG_BLOCK_SIZE: usize = 32;
 const QEAAS_MAX_BYTES_PER_REQUEST: usize = 8;
+
+const ACK_TIMEOUT: Duration = Duration::from_secs(5);
+
 const ZENOH_ROUTER_ENDPOINT_PLAIN: &str = "tcp/127.0.0.1:7447";
 const ZENOH_ROUTER_ENDPOINT_TLS: &str = "tls/127.0.0.1:7447";
 
@@ -287,6 +295,36 @@ fn load_zenoh_config() -> anyhow::Result<zenoh::Config> {
     Ok(config)
 }
 
+
+// Función para parsear el ack del microcontrolador
+fn parse_ack(bytes: &[u8]) -> anyhow::Result<(u64, u32, u32, u32)> {
+    if bytes.len() != ACK_SIZE {
+        anyhow::bail!(
+            "ACK con tamaño incorrecto: {} bytes (esperados {})",
+            bytes.len(),
+            ACK_SIZE
+        );
+    }
+
+    let sequence_id = u64::from_be_bytes(
+        bytes[0..8].try_into()?
+    );
+
+    let trng_ns = u32::from_be_bytes(
+        bytes[8..12].try_into()?
+    );
+
+    let xor_ns = u32::from_be_bytes(
+        bytes[12..16].try_into()?
+    );
+
+    let final_active_entropy_ns = u32::from_be_bytes(
+        bytes[16..20].try_into()?
+    );
+
+    Ok((sequence_id, trng_ns, xor_ns, final_active_entropy_ns))
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("QeeaS Rust server arrancando.");
@@ -392,6 +430,131 @@ async fn main() -> Result<()> {
         .await
         .map_err(map_zenoh_error)?;
 
+    // Crear tabla con identificador de bloque y momento en el que se publica
+    let pending = Arc::new(
+        Mutex::new(
+            HashMap::<u64, Instant>::new()
+        )
+    );
+
+    let pending_ack = Arc::clone(&pending);
+
+    let pending_timeout = Arc::clone(&pending);
+
+    tokio::spawn(async move {
+        loop {
+            time::sleep(Duration::from_millis(500)).await;
+            let now = Instant::now();
+            let timed_out = {
+                let mut pending = pending_timeout
+                    .lock()
+                    .expect("Mutex pending corrupto");
+                let before = pending.len();
+                pending.retain(
+                    |sequence_id, sent_at| {
+                        let keep = now.duration_since(*sent_at) < ACK_TIMEOUT;
+
+                        if !keep {
+                            eprintln!("[ACK-TIMEOUT] sequence_id={} sin ACK", sequence_id);
+                        }
+
+                        keep
+                    },
+                );
+
+                before - pending.len()
+            };
+
+            for _ in 0..timed_out {
+                observability::record_ack_timeout();
+            }
+        }
+    });
+
+    let previous_rtt = Arc::new(Mutex::new(None::<f64>));
+
+    let previous_rtt_ack = Arc::clone(&previous_rtt);
+
+    let _ack_subscriber = session
+        .declare_subscriber(ACK_TOPIC)
+        .callback(move |sample| {
+            // Obtener payload del ACK
+            let payload = sample.payload().to_bytes();
+            let ack_bytes = payload.as_ref();
+
+            // Interpretar ACK recibido
+            let (sequence_id, trng_ns, xor_ns, final_active_entropy_ns) =
+                match parse_ack(ack_bytes) {
+                    Ok(values) => values,
+
+                    Err(err) => {
+                        eprintln!(
+                            "[ACK] Error interpretando ACK: {:#}",
+                            err
+                        );
+                        return;
+                    }
+                };
+
+            // Buscar cuándo se publicó este bloque y borrarlo de la tabla
+            let sent_at = {
+                let mut pending =
+                    pending_ack
+                        .lock()
+                        .expect("Mutex pending corrupto");
+
+                pending.remove(&sequence_id)
+            };
+
+            match sent_at {
+                Some(sent_at) => {
+                    // RTT Rust -> ESP32 -> Rust
+                    let rtt = sent_at.elapsed().as_secs_f64();
+                    observability::record_e2e_rtt(rtt);
+
+                    let jitter = {
+                        let mut previous = previous_rtt_ack
+                            .lock()
+                            .expect("Mutex previous_rtt corrupto");
+
+                        let jitter = previous.map(|prev| (rtt - prev).abs());
+
+                        *previous = Some(rtt);
+                        jitter
+                    };
+
+                    if let Some(jitter) = jitter {observability::record_e2e_jitter(jitter);}
+
+                    observability::record_block_acknowledged();
+                    observability::record_esp32_trng_duration(trng_ns);
+                    observability::record_esp32_xor_duration(xor_ns);
+                    observability::record_esp32_final_active_entropy_duration(final_active_entropy_ns);
+
+                    println!(
+                        "[ACK] seq={} RTT={:.3} ms TRNG={} ns XOR={} ns final entropy={}",
+                        sequence_id,
+                        rtt * 1000.0,
+                        trng_ns,
+                        xor_ns,
+                        final_active_entropy_ns
+                    );
+                }
+
+                None => {
+                    eprintln!(
+                        "[ACK] ACK recibido para sequence_id={} \
+                        pero no existe en pending",
+                        sequence_id
+                    );
+                }
+            }
+        })
+        .await
+        .map_err(map_zenoh_error)?;
+
+    // Crear identificador de bloques para métricas
+    let mut sequence_id: u64 = 0;
+
     loop {
         let source = qrng_source_mode.as_str();
 
@@ -433,8 +596,30 @@ async fn main() -> Result<()> {
 
         let publish_zenoh_start = Instant::now();
 
+        sequence_id += 1;
+        // Crear bloque a enviar a través de Zenoh
+        let mut frame =  Vec::with_capacity(TOTAL_BLOCK_SIZE);
+
+        // Añadir identificador de bloque al mensaje a enviar
+        frame.extend_from_slice(
+            &sequence_id.to_be_bytes()
+        );
+
+        // Añadir QRNG al bloque a enviar
+        frame.extend_from_slice(
+            &qrng_block
+        );
+
+        let sent_at = Instant::now();
+
+        // Grabar en la tabla el momento en el que sale cada bloque
+        pending
+            .lock()
+            .expect("Mutex pending corrupto")
+            .insert(sequence_id, sent_at);
+
         let publish_zenoh_result = session
-            .put(QRNG_TOPIC, qrng_block)
+            .put(QRNG_TOPIC, frame)
             .await;
 
         // Registrar duración de la publicación a la sesión Zenoh

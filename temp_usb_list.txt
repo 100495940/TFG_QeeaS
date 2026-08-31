@@ -1,6 +1,6 @@
 Connected:
 BUSID  VID:PID    DEVICE                                                        STATE
-1-1    10c4:ea60  Silicon Labs CP210x USB to UART Bridge (COM7)                 Attached
+1-1    10c4:ea60  Silicon Labs CP210x USB to UART Bridge (COM7)                 Shared
 1-3    03f0:1a4a  Dispositivo de entrada USB                                    Not shared
 1-4    1ea7:0066  Dispositivo de entrada USB                                    Not shared
 1-5    04ca:3015  Bluetooth USB Module                                          Not shared

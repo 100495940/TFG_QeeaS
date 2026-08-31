@@ -25,6 +25,7 @@ CONFIG_DIR="$PROJECT_ROOT/config/zenoh"
 ZENOH_HOST_IP="${ZENOH_HOST_IP:-}"
 ZENOH_TLS_PORT="${ZENOH_TLS_PORT:-7447}"
 FORCE_TLS_CERTS="${FORCE_TLS_CERTS:-0}"
+REGENERATE_ROUTER="${REGENERATE_ROUTER:-0}"
 
 CA_KEY="$CA_DIR/ca.key"
 CA_CERT="$CA_DIR/ca.crt"
@@ -103,6 +104,13 @@ fi
 # ------------------------------------------------------------
 # 2. Crear certificado del router Zenoh
 # ------------------------------------------------------------
+
+if ["$REGENERATE_ROUTER"]; then
+    rm -f certs/router/router.key
+    rm -f certs/router/router.csr
+    rm -f certs/router/router.crt
+    rm -f certs/router/router.cnf
+fi
 
 if [ ! -f "$ROUTER_KEY" ] || [ ! -f "$ROUTER_CERT" ]; then
     echo "[TLS] Creando certificado del router Zenoh..."

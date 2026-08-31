@@ -2,10 +2,10 @@ use anyhow::{Context, Result};
 use metrics::{counter, histogram};
 use metrics_exporter_prometheus::PrometheusBuilder;
 
-/// Puerto donde se expone el endpoint /metrics.
+// Puerto donde se expone el endpoint /metrics.
 const METRICS_PORT: u16 = 9091;
 
-// Inicializamos métricas que en principio deben tener valores a 0
+// Inicializar métricas que en principio deben tener valores a 0
 fn initialize_metrics() {
     counter!(
         "qeaas_qrng_total_error_requests",
@@ -17,9 +17,14 @@ fn initialize_metrics() {
         "qeaas_zenoh_publish_errors_total"
     )
     .absolute(0);
+
+    counter!(
+        "qeaas_ack_timeouts_total"
+    )
+    .absolute(0);
 }
 
-/// Inicializar el exporter HTTP de Prometheus.
+// Inicializar el exporter HTTP de Prometheus.
 pub fn init_metrics() -> Result<()> {
     PrometheusBuilder::new()
         .with_http_listener(([0, 0, 0, 0], METRICS_PORT))
@@ -34,6 +39,62 @@ pub fn init_metrics() -> Result<()> {
     );
 
     Ok(())
+}
+
+// Registrar número de bloques que nunca hacen ack
+pub fn record_ack_timeout() {
+    counter!(
+        "qeaas_ack_timeouts_total"
+    )
+    .increment(1);
+}
+
+// Registrar número total de bloques acknowledged
+pub fn record_block_acknowledged() {
+    counter!(
+        "qeaas_qrng_blocks_acknowledged_total"
+    )
+    .increment(1);
+}
+
+// Registrar número de ciclos del microcontrolador para sacar la salida final híbrida
+pub fn record_esp32_final_active_entropy_duration(us: u32) {
+    histogram!(
+        "qeaas_esp32_final_active_entropy_duration_seconds"
+    )
+    .record(us as f64 / 1_000_000.0);
+}
+
+// Registrar número de ciclos del microcontrolador para sacar TRNG
+pub fn record_esp32_trng_duration(us: u32) {
+    histogram!(
+        "qeaas_esp32_trng_duration_seconds"
+    )
+    .record(us as f64 / 1_000_000.0);
+}
+
+// Registrar número de ciclos del microcontrolador para realizar XOR
+pub fn record_esp32_xor_duration(us: u32) {
+    histogram!(
+        "qeaas_esp32_xor_duration_seconds"
+    )
+    .record(us as f64 / 1_000_000.0);
+}
+
+// Registrar variación entre dos RTT consecutivos (jitter)
+pub fn record_e2e_jitter(seconds: f64) {
+    histogram!(
+        "qeaas_e2e_jitter_seconds"
+    )
+    .record(seconds);
+}
+
+// Registrar tiempo en completar flujo completo
+pub fn record_e2e_rtt(seconds: f64) {
+    histogram!(
+        "qeaas_e2e_rtt_seconds"
+    )
+    .record(seconds);
 }
 
 /// Registrar un bloque QRNG publicado a Zenoh.
