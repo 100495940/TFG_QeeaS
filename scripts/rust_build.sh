@@ -21,36 +21,24 @@ mkdir -p "$CARGO_TARGET_DIR"
 cd "$PROJECT_DIR"
 
 CURRENT_RUST="$(rustc --version | awk '{print $2}')"
+CURRENT_CARGO="$(cargo --version | awk '{print $2}')"
 
 echo "[RUST-BUILD] Proyecto: $PROJECT_DIR"
 echo "[RUST-BUILD] Rust actual: $CURRENT_RUST"
+echo "[RUST-BUILD] Rust actual: $CURRENT_CARGO"
 echo "[RUST-BUILD] Rust mínimo: $MIN_RUST"
 echo "[RUST-BUILD] Perfil: $RUST_PROFILE"
 echo "[RUST-BUILD] Jobs: $CARGO_JOBS"
 echo "[RUST-BUILD] Target dir: $CARGO_TARGET_DIR"
 echo "[RUST-BUILD] Binario: $BIN_NAME"
 
-if [ "$(printf '%s\n' "$MIN_RUST" "$CURRENT_RUST" | sort -V | head -n1)" != "$MIN_RUST" ]; then
-    echo "[RUST-BUILD] Versión de Rust demasiado antigua. Actualizando..."
-
-    rustup default stable
-    rustup update stable
-
-    source "$HOME/.cargo/env"
-
-    CURRENT_RUST="$(rustc --version | awk '{print $2}')"
-    echo "[RUST-BUILD] Nueva versión de Rust: $CURRENT_RUST"
-
-    cargo clean || true
-fi
-
 if [ "$RUST_PROFILE" = "release" ]; then
     echo "[RUST-BUILD] Compilando en modo release..."
-    cargo build --release --bin "$BIN_NAME" -j "$CARGO_JOBS"
+    cargo build --locked --release --bin "$BIN_NAME" -j "$CARGO_JOBS"
     BINARY="$CARGO_TARGET_DIR/release/$BIN_NAME"
 else
     echo "[RUST-BUILD] Compilando en modo debug..."
-    cargo build --bin "$BIN_NAME" -j "$CARGO_JOBS"
+    cargo build --locked --bin "$BIN_NAME" -j "$CARGO_JOBS"
     BINARY="$CARGO_TARGET_DIR/debug/$BIN_NAME"
 fi
 

@@ -92,8 +92,8 @@ ZENOH_PORT="$(echo "$ZENOH_ENDPOINT" | sed -E 's#^[a-zA-Z0-9]+/[^:]+:([0-9]+)$#\
 echo "============================================================"
 echo " CONFIGURACION ZENOH"
 echo "============================================================"
-echo "Endpoint      : $ZENOH_ENDPOINT"
-echo "Security mode : $QEEAS_SECURITY_MODE"
+echo "Endpoint: $ZENOH_ENDPOINT"
+echo "Security mode: $QEEAS_SECURITY_MODE"
 echo "Host IP: $ZENOH_HOST_IP"
 echo "Puerto: $ZENOH_PORT"
 echo "============================================================"
@@ -295,11 +295,13 @@ if [ "$MODO_NIST" = false ]; then
 
         ENTROPY_EXPERIMENT="$(date +'%H_%M_%d_%m_%Y')" \
         ZENOH_CONFIG="$ZENOH_TLS_RUST_CONFIG" \
+        QEEAS_API_URL="http://172.17.0.1:6065" \
         bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
     else
         echo "[RUST] Modo plain/TCP activo"
 
         ENTROPY_EXPERIMENT="$(date +'%H_%M_%d_%m_%Y')" \
+        QEEAS_API_URL="http://172.17.0.1:6065" \
         bash scripts/rust_run.sh > "$QEEAS_LOG_DIR/rust_server.log" 2>&1 &
     fi
 
