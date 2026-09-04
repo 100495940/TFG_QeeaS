@@ -1,11 +1,13 @@
 Connected:
 BUSID  VID:PID    DEVICE                                                        STATE
 1-1    10c4:ea60  Silicon Labs CP210x USB to UART Bridge (COM7)                 Shared
-1-4    0aba:0102  Quantis USB                                                   Shared
+1-3    03f0:1a4a  Dispositivo de entrada USB                                    Not shared
+1-4    1ea7:0066  Dispositivo de entrada USB                                    Not shared
 1-5    04ca:3015  Bluetooth USB Module                                          Not shared
 1-7    0408:a031  VGA WebCam                                                    Not shared
 
 Persisted:
 GUID                                  DEVICE
+8daf09d8-503c-42d1-8d5c-3eeadc2cf9ba  Quantis USB
 f32bb0e1-5cdc-45d0-8e3d-892974cee463  USB-SERIAL CH340 (COM8)
 

@@ -100,7 +100,7 @@ fi
 
 # Variables para usar dispositivos QUANTIS USB
 export QRNG_DOCKER_DEVICE="${QRNG_DOCKER_DEVICE:-/dev/bus/usb:/dev/bus/usb}"
-export QRNG_FALLBACK="${QRNG_FALLBACK:-off}"
+export QRNG_FALLBACK="${QRNG_FALLBACK:-on}"
 export QRNG_SOURCE="${QRNG_SOURCE:-usb}"
 export QRNG_XOR_OS="${QRNG_XOR_OS:-on}"
 

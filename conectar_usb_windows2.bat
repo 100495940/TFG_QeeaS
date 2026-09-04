@@ -53,13 +53,13 @@ if not defined BUSID_ESP32 (
 echo [INFO] Placa ESP32 detectada con BUSID: !BUSID_ESP32!
 
 if not defined BUSID_QUANTIS (
-    echo [ERROR] No se ha detectado ningún QUANTIS compatible conectado.
-    echo Asegurate de que QUANTIS esté conectado por USB.
-    pause
-    exit /b
+    echo [ERROR] No se ha detectado ningï¿½n QUANTIS compatible conectado.
+    echo Asegurate de que QUANTIS estï¿½ conectado por USB.
 )
 
-echo [INFO] QUANTIS detectado con BUSID: !BUSID_QUANTIS!
+if defined BUSID_QUANTIS (
+    echo [INFO] QUANTIS detectado con BUSID: !BUSID_QUANTIS!
+)
 
 :: ==========================================
 :: PERMISOS DE RED (FIREWALL) AUTOMATIZADOS
@@ -82,33 +82,39 @@ echo.
 :: Vincular e inyectar el hardware al contenedor
 echo [2/3] Conectando hardware a la maquina virtual de Docker
 
-:: Forzar vinculación previa por si alguna conexión se ha quedado colgada
+:: Forzar vinculaciï¿½n previa por si alguna conexiï¿½n se ha quedado colgada
 usbipd detach --busid !BUSID_ESP32! >nul 2>nul
 timeout /t 2 >nul
 
-usbipd detach --busid !BUSID_QUANTIS! >nul 2>nul
-timeout /t 2 >nul
+if defined BUSID_QUANTIS (
+    usbipd detach --busid !BUSID_QUANTIS! >nul 2>nul
+    timeout /t 2 >nul
+)
 
 :: Vincular puerto de nuevo
 usbipd bind --busid !BUSID_ESP32! >nul 2>nul
 
 :: Vincular puerto de nuevo
-usbipd bind --busid !BUSID_QUANTIS! >nul 2>nul
+if defined BUSID_QUANTIS (
+    usbipd bind --busid !BUSID_QUANTIS! >nul 2>nul
+)
 
 :: Inyectar la placa en WSL 
 usbipd attach --wsl --busid !BUSID_ESP32!
 if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al intentar pasar el USB a Docker. ¿Esta Docker Desktop abierto?
+    echo [ERROR] Fallo al intentar pasar el USB a Docker. ï¿½Esta Docker Desktop abierto?
     pause
     exit /b
 )
 
 :: Inyectar la placa en WSL 
+if defined BUSID_QUANTIS (
 usbipd attach --wsl --busid !BUSID_QUANTIS!
-if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al intentar pasar el USB a Docker. ¿Esta Docker Desktop abierto?
-    pause
-    exit /b
+    if %errorlevel% neq 0 (
+        echo [ERROR] Fallo al intentar pasar el USB a Docker. ï¿½Esta Docker Desktop abierto?
+        pause
+        exit /b
+    )
 )
 
 :: Abrir el entorno

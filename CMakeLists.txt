@@ -91,6 +91,7 @@ target_sources(zenohpico_static PRIVATE
 target_compile_definitions(zenohpico_static PUBLIC 
     ZENOH_ZEPHYR=1
     Z_FEATURE_LINK_TLS=1
+    ENTROPY_POOL_USE_BLAKE2S=1
     )
 
 # Forzar dependencia

@@ -1,0 +1,61 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : source_qrng
+Archivo                          : data/captures/13_33_04_09_2026/entropy_source_qrng.bin
+Bytes analizados                 : 74912
+Bloques completos de 32 bytes    : 2341
+Bytes sobrantes                  : 0
+Valores byte unicos              : 256/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.99765612 bits/byte
+Min-entropia empirica            : 7.77084445 bits/byte
+Chi-cuadrado                     : 242.7270
+p-value chi-cuadrado             : 0.69943690
+Byte mas frecuente               : 217
+Frecuencia byte mas frecuente    : 343
+Probabilidad byte mas frecuente  : 0.00457871
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 599296
+Ceros                            : 299870
+Unos                             : 299426
+Proporcion ceros                 : 0.50037043
+Proporcion unos                  : 0.49962957
+Monobit S_obs                    : 0.57353811
+Monobit p-value                  : 0.56628040
+Runs aplicable                   : True
+Runs count                       : 299346
+Runs p-value                     : 0.43551213
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : -0.0013986124
+Autocorrelacion bits lag-1       : 0.0010089712
+Bloques totales de 32 bytes      : 2341
+Bloques unicos de 32 bytes       : 2341
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 3
+Ratio compresion zlib            : 1.00041382
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 2
+Shannon ventana minimo           : 7.99403994
+Shannon ventana media            : 7.99426783
+Shannon ventana maximo           : 7.99449572
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/13_33_04_09_2026/source_qrng_metrics.json
+Histograma                       : data/reports/13_33_04_09_2026/source_qrng_histogram.png
+Shannon por ventanas             : data/reports/13_33_04_09_2026/source_qrng_windowed_shannon.png
+Autocorrelacion                  : data/reports/13_33_04_09_2026/source_qrng_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/13_33_04_09_2026/source_qrng_byte_counts.csv
+
+============================================================
