@@ -1,0 +1,61 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : trng_data_radio_on
+Archivo                          : data/captures/trng_radio_on/trng_data_radio_on.bin
+Bytes analizados                 : 1048576
+Bloques completos de 32 bytes    : 32768
+Bytes sobrantes                  : 0
+Valores byte unicos              : 256/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.99978747 bits/byte
+Min-entropia empirica            : 7.92887288 bits/byte
+Chi-cuadrado                     : 309.0708
+p-value chi-cuadrado             : 0.01153201
+Byte mas frecuente               : 148
+Frecuencia byte mas frecuente    : 4303
+Probabilidad byte mas frecuente  : 0.00410366
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 8388608
+Ceros                            : 4196244
+Unos                             : 4192364
+Proporcion ceros                 : 0.50023127
+Proporcion unos                  : 0.49976873
+Monobit S_obs                    : 1.33963589
+Monobit p-value                  : 0.18036375
+Runs aplicable                   : True
+Runs count                       : 4194025
+Runs p-value                     : 0.84771135
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : -0.0016616957
+Autocorrelacion bits lag-1       : 0.0000664242
+Bloques totales de 32 bytes      : 32768
+Bloques unicos de 32 bytes       : 32768
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 4
+Ratio compresion zlib            : 1.00031090
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 32
+Shannon ventana minimo           : 7.99360620
+Shannon ventana media            : 7.99437834
+Shannon ventana maximo           : 7.99558239
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/trng_radio_on/trng_data_radio_on_metrics.json
+Histograma                       : data/reports/trng_radio_on/trng_data_radio_on_histogram.png
+Shannon por ventanas             : data/reports/trng_radio_on/trng_data_radio_on_windowed_shannon.png
+Autocorrelacion                  : data/reports/trng_radio_on/trng_data_radio_on_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/trng_radio_on/trng_data_radio_on_byte_counts.csv
+
+============================================================

@@ -8,17 +8,22 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/net/socket.h>
+#include <zephyr/sys/byteorder.h>
 #include <zenoh-pico.h>
 #include "entropy.h"
 #include "entropy_pool.h"
 
-#define QRNG_TOPIC "qeeas/qrng/chunk"
-#define STATUS_TOPIC "qeeas/esp32/status"
+#define ACK_TOPIC "qeeas/esp32/ack"
 #define ENTROPY_SOURCE_TRNG_TOPIC   "qeeas/esp32/entropy/source/trng"
 #define ENTROPY_SOURCE_QRNG_TOPIC   "qeeas/esp32/entropy/source/qrng"
 #define ENTROPY_FINAL_ACTIVE_TOPIC  "qeeas/esp32/entropy/final/active"
 #define ENTROPY_FINAL_XOR_TOPIC     "qeeas/esp32/entropy/final/xor"
-#define BLOCK_SIZE 32
+#define QRNG_TOPIC "qeeas/qrng/chunk"
+#define STATUS_TOPIC "qeeas/esp32/status"
+
+#define ACK_BLOCK_SIZE 20
+#define ENTROPY_BLOCK_SIZE 32
+#define TOTAL_BLOCK_SIZE 40
 
 LOG_MODULE_REGISTER(zenoh_client, LOG_LEVEL_INF);
 
@@ -55,9 +60,9 @@ static int crear_status_fusion(char *status_msg,
                        "out_head=%02x%02x%02x%02x",
                        entropy_pool_get_last_mix_mode(),
                        (unsigned long long)entropy_pool_get_mix_counter(),
-                       BLOCK_SIZE,
-                       BLOCK_SIZE,
-                       BLOCK_SIZE,
+                       ENTROPY_BLOCK_SIZE,
+                       ENTROPY_BLOCK_SIZE,
+                       ENTROPY_BLOCK_SIZE,
                        qrng_buffer[0], qrng_buffer[1],
                        qrng_buffer[2], qrng_buffer[3],
                        trng_buffer[0], trng_buffer[1],
@@ -145,23 +150,33 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     const z_loaned_bytes_t *payload = z_sample_payload(sample);
     size_t payload_len = z_bytes_len(payload);
 
-    // Validar que el servidor envía exactamente 32 bytes de entropía cuántica
-    if (payload_len != BLOCK_SIZE) {
-        LOG_ERR("Bloque QRNG ignorado: Tamaño incorrecto: (%zu bytes)", payload_len);
+    // Validar que el servidor envía exactamente 32 bytes de entropía cuántica 
+    // más los 8 bytes del identificador de bloques
+    if (payload_len != TOTAL_BLOCK_SIZE) {
+        LOG_ERR("Bloque del servidor ignorado: Tamaño incorrecto: (%zu bytes)", payload_len);
         return;
     }
 
     // Crear los distintos buffers de entropía
-    uint8_t qrng_buffer[BLOCK_SIZE];
-    uint8_t trng_buffer[BLOCK_SIZE];
-    uint8_t final_entropy_buffer[BLOCK_SIZE];
-    uint8_t xor_entropy_buffer[BLOCK_SIZE];
+    uint8_t qrng_buffer[ENTROPY_BLOCK_SIZE];
+    uint8_t trng_buffer[ENTROPY_BLOCK_SIZE];
+    uint8_t final_entropy_buffer[ENTROPY_BLOCK_SIZE];
+    uint8_t xor_entropy_buffer[ENTROPY_BLOCK_SIZE];
+
+    // Crear buffer del mensaje total recibido (entropía qrng + sequence_id)
+    uint8_t message_buffer[TOTAL_BLOCK_SIZE];
+
+    // Crear buffer para el acknowledge del microcontrolador
+    uint8_t ack_buffer[ACK_BLOCK_SIZE];
 
     // Recibir entropía cuántica del servidor en el buffer del qrng
     z_bytes_reader_t reader = z_bytes_get_reader(payload);
-    size_t read_bytes = z_bytes_reader_read(&reader, qrng_buffer, BLOCK_SIZE);
+    size_t read_bytes = z_bytes_reader_read(&reader, message_buffer, TOTAL_BLOCK_SIZE);
 
-    if (read_bytes != BLOCK_SIZE) {
+    uint64_t sequence_id = sys_get_be64(&message_buffer[0]);
+    memcpy(qrng_buffer, &message_buffer[8], ENTROPY_BLOCK_SIZE);
+
+    if (read_bytes != TOTAL_BLOCK_SIZE) {
         LOG_ERR("Error al leer el bloque QRNG: (%zu bytes leídos)", read_bytes);
         return;
     }
@@ -170,23 +185,52 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
         read_bytes, qrng_buffer[0], qrng_buffer[1], qrng_buffer[2], qrng_buffer[3]);
 
     // Extraer entropía local del TRNG de la placa
-    get_trng_bytes(trng_buffer, BLOCK_SIZE);
+    uint32_t start_get_trng_bytes = k_cycle_get_32();
+    get_trng_bytes(trng_buffer, ENTROPY_BLOCK_SIZE);
+    uint32_t end_get_trng_bytes = k_cycle_get_32();
+    uint32_t trng_cycles = end_get_trng_bytes - start_get_trng_bytes;
+    uint32_t trng_ns = k_cyc_to_ns_floor32(trng_cycles);
     LOG_INF("Bloque TRNG recibido correctamente. trng: %02x%02x%02x%02x", 
         trng_buffer[0], qrng_buffer[1], trng_buffer[2], trng_buffer[3]);
 
-    if (entropy_pool_mix(qrng_buffer, BLOCK_SIZE, trng_buffer, BLOCK_SIZE) < 0) {
+    LOG_INF(
+        "TRNG start=%u end=%u cycles=%u ns=%u freq=%u",
+        start_get_trng_bytes,
+        end_get_trng_bytes,
+        trng_cycles,
+        trng_ns,
+        sys_clock_hw_cycles_per_sec()
+    );
+
+    // Actualizar pool de entropía
+    uint32_t start_get_final_active_entropy_bytes = k_cycle_get_32();
+    if (entropy_pool_mix(qrng_buffer, ENTROPY_BLOCK_SIZE, trng_buffer, ENTROPY_BLOCK_SIZE) < 0) {
         LOG_ERR("Error actualizando el pool local de entropía");
         return;
     }
+    uint32_t end_get_final_active_entropy_bytes = k_cycle_get_32();
+    uint32_t final_active_entropy_cycles = end_get_final_active_entropy_bytes - start_get_final_active_entropy_bytes;
+    uint32_t final_active_entropy_ns = k_cyc_to_ns_floor32(final_active_entropy_cycles);
+
+    LOG_INF(
+        "Final active entropy start=%u end=%u cycles=%u ns=%u freq=%u",
+        start_get_final_active_entropy_bytes,
+        end_get_final_active_entropy_bytes,
+        final_active_entropy_cycles,
+        final_active_entropy_ns,
+        sys_clock_hw_cycles_per_sec()
+    );
 
     LOG_INF("Fusión completada. TRNG y QRNG combinados.");
 
-    if (entropy_pool_extract(final_entropy_buffer, BLOCK_SIZE) < 0) {
+    // Extraer entropía del pool
+    if (entropy_pool_extract(final_entropy_buffer, ENTROPY_BLOCK_SIZE) < 0) {
         LOG_ERR("Error extrayendo entropía desde el pool local");
         return;
     }
 
     LOG_INF("Entropía extraída desde el pool local.");
+
     LOG_INF("Pool mode: %s, mix_counter: %llu, output: %02x%02x%02x%02x",
             entropy_pool_get_last_mix_mode(),
             (unsigned long long)entropy_pool_get_mix_counter(),
@@ -194,9 +238,22 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
             final_entropy_buffer[2], final_entropy_buffer[3]);
 
     // Fusión criptográfica experimental usando XOR
-    for (size_t i = 0; i < BLOCK_SIZE; i++) {
+    uint32_t start_get_xor_bytes = k_cycle_get_32();
+    for (size_t i = 0; i < ENTROPY_BLOCK_SIZE; i++) {
         xor_entropy_buffer[i] = qrng_buffer[i] ^ trng_buffer[i];
     }
+    uint32_t end_get_xor_bytes = k_cycle_get_32();
+    uint32_t xor_cycles = end_get_xor_bytes - start_get_xor_bytes;
+    uint32_t xor_ns = k_cyc_to_ns_floor32(xor_cycles);
+
+    LOG_INF(
+        "XOR start=%u end=%u cycles=%u ns=%u freq=%u",
+        start_get_xor_bytes,
+        end_get_xor_bytes,
+        xor_cycles,
+        xor_ns,
+        sys_clock_hw_cycles_per_sec()
+    );
 
     // Publicar el bloque de status
     char status_msg[256];
@@ -226,29 +283,40 @@ static void recepcion_qrng_callback(z_loaned_sample_t *sample, void *arg) {
     if (publicar_bytes_zenoh(z_loan(session),
                             ENTROPY_SOURCE_QRNG_TOPIC,
                             qrng_buffer,
-                            BLOCK_SIZE) < 0) {
+                            ENTROPY_BLOCK_SIZE) < 0) {
         LOG_WRN("No se pudo publicar QRNG en topic de observabilidad");
     }
 
     if (publicar_bytes_zenoh(z_loan(session),
                             ENTROPY_SOURCE_TRNG_TOPIC,
                             trng_buffer,
-                            BLOCK_SIZE) < 0) {
+                            ENTROPY_BLOCK_SIZE) < 0) {
         LOG_WRN("No se pudo publicar TRNG en topic de observabilidad");
     }
 
     if (publicar_bytes_zenoh(z_loan(session),
                             ENTROPY_FINAL_XOR_TOPIC,
                             xor_entropy_buffer,
-                            BLOCK_SIZE) < 0) {
+                            ENTROPY_BLOCK_SIZE) < 0) {
         LOG_WRN("No se pudo publicar baseline XOR en topic de observabilidad");
     }
 
     if (publicar_bytes_zenoh(z_loan(session),
                             ENTROPY_FINAL_ACTIVE_TOPIC,
                             final_entropy_buffer,
-                            BLOCK_SIZE) < 0) {
+                            ENTROPY_BLOCK_SIZE) < 0) {
         LOG_WRN("No se pudo publicar salida final activa en topic de observabilidad");
+    }
+
+    sys_put_be64(sequence_id, &ack_buffer[0]);
+    sys_put_be32(trng_ns, &ack_buffer[8]);
+    sys_put_be32(xor_ns, &ack_buffer[12]);
+    sys_put_be32(final_active_entropy_ns, &ack_buffer[16]);
+    if (publicar_bytes_zenoh(z_loan(session),
+                            ACK_TOPIC,
+                            ack_buffer,
+                            ACK_BLOCK_SIZE) < 0) {
+        LOG_WRN("No se pudo publicar acknowledge en su topic correspondiente");
     }
 
 }

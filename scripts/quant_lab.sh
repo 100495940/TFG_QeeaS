@@ -7,7 +7,12 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+QUANTIS_LIBS_DIR="${QUANTIS_LIBS_DIR:-/quantis_lib_deps/qursa-software-installation/quantis-libraries}"
+
 QEAAS_DIR="${QEAAS_DIR:-/qeeas_deps/qrng_server}"
+QEAAS_QUANTIS_DEPS_DIR="$QEAAS_DIR/eaas-quantis-qrng-api/dependencies"
+QEAAS_QUANTIS_LIBS_DIR="$QEAAS_QUANTIS_DEPS_DIR/quantis-libraries"
+
 QEAAS_API_URLS="${QEAAS_API_URLS:-http://host.docker.internal:6065 http://127.0.0.1:6065}"
 #QEAAS_API_URL="${QEAAS_API_URL:-http://127.0.0.1:6065}"
 
@@ -16,12 +21,43 @@ cat > "$QEAAS_COMPOSE_OVERRIDE" <<'EOF'
 services:
   qrng-api:
     network_mode: bridge
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
     ports:
       - "6065:6065"
 EOF
 
+echo "[QRNG] Preparando dependencia drivers QUANTIS..."
+bash "$PROJECT_ROOT/scripts/bootstrap_quantis_drivers.sh"
+
+echo "[QRNG] Preparando dependencia librerías QUANTIS..."
+bash "$PROJECT_ROOT/scripts/bootstrap_quantis_libs.sh"
+
 echo "[QRNG] Preparando dependencia QEaaS..."
 bash "$PROJECT_ROOT/scripts/bootstrap_qrng.sh"
+
+echo "[QRNG] Integrando librerías QUANTIS en QEaaS..."
+
+if [ ! -d "$QUANTIS_LIBS_DIR" ]; then
+    echo "[QRNG][ERROR] No existe la carpeta de librerías QUANTIS:"
+    echo "[QRNG][ERROR] $QUANTIS_LIBS_DIR"
+    exit 1
+fi
+
+if [ ! -d "$QEAAS_QUANTIS_DEPS_DIR" ]; then
+    echo "[QRNG][ERROR] No existe el directorio dependencies de QEaaS:"
+    echo "[QRNG][ERROR] $QEAAS_QUANTIS_DEPS_DIR"
+    exit 1
+fi
+
+# Eliminar copia anterior para evitar archivos obsoletos
+rm -rf "$QEAAS_QUANTIS_LIBS_DIR"
+
+# Copiar la carpeta completa
+cp -a "$QUANTIS_LIBS_DIR" "$QEAAS_QUANTIS_DEPS_DIR/"
+
+echo "[QRNG] Librerías QUANTIS integradas correctamente:"
+echo "[QRNG] $QEAAS_QUANTIS_LIBS_DIR"
 
 echo "[QRNG] Levantando servidor cuántico de números desde $QEAAS_DIR"
 echo "[QRNG] API de números cuánticos escuchando en una de las siguientes URLs:"
@@ -62,16 +98,23 @@ fi
 # Si ejecutamos el comando directamente, se puede cortar todo el script
 # si borramos un contenedor que no existe todavía por ejemplo.
 
+# Variables para usar dispositivos QUANTIS USB
+export QRNG_DOCKER_DEVICE="${QRNG_DOCKER_DEVICE:-/dev/bus/usb:/dev/bus/usb}"
+export QRNG_FALLBACK="${QRNG_FALLBACK:-on}"
+export QRNG_SOURCE="${QRNG_SOURCE:-usb}"
+export QRNG_XOR_OS="${QRNG_XOR_OS:-on}"
 
+echo "[QRNG] Fuente configurada: $QRNG_SOURCE"
+echo "[QRNG] Dispositivo Docker: $QRNG_DOCKER_DEVICE"
 
 # Levantar los servicios en modo detached para no bloquear la terminal
 echo "[QRNG] Levantando contenedores QEaaS..."
 #"${COMPOSE_CMD[@]}" up --build -d qrng-api nginx-proxy
-"${COMPOSE_CMD[@]}" up --build -d qrng-api
-#"${COMPOSE_CMD[@]}" \
-#    -f docker-compose.yaml \
-#    -f "$QEAAS_COMPOSE_OVERRIDE" \
-#    up --build -d qrng-api
+#"${COMPOSE_CMD[@]}" up --build -d qrng-api
+"${COMPOSE_CMD[@]}" \
+    -f docker-compose.yaml \
+    -f "$QEAAS_COMPOSE_OVERRIDE" \
+    up --build -d qrng-api
 
 echo "[QRNG] Esperando a que la API HTTP responda..."
 

@@ -1,0 +1,61 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : final_xor
+Archivo                          : data/captures/16_13_03_09_2026/entropy_final_xor.bin
+Bytes analizados                 : 63392
+Bloques completos de 32 bytes    : 1981
+Bytes sobrantes                  : 0
+Valores byte unicos              : 256/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.99705519 bits/byte
+Min-entropia empirica            : 7.79214183 bits/byte
+Chi-cuadrado                     : 258.4957
+p-value chi-cuadrado             : 0.42717015
+Byte mas frecuente               : 189
+Frecuencia byte mas frecuente    : 286
+Probabilidad byte mas frecuente  : 0.00451161
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 507136
+Ceros                            : 253700
+Unos                             : 253436
+Proporcion ceros                 : 0.50026029
+Proporcion unos                  : 0.49973971
+Monobit S_obs                    : 0.37071632
+Monobit p-value                  : 0.71084883
+Runs aplicable                   : True
+Runs count                       : 253589
+Runs p-value                     : 0.95281623
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : -0.0030403556
+Autocorrelacion bits lag-1       : -0.0000811194
+Bloques totales de 32 bytes      : 1981
+Bloques unicos de 32 bytes       : 1981
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 2
+Ratio compresion zlib            : 1.00041015
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 1
+Shannon ventana minimo           : 7.99393005
+Shannon ventana media            : 7.99393005
+Shannon ventana maximo           : 7.99393005
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/16_13_03_09_2026/final_xor_metrics.json
+Histograma                       : data/reports/16_13_03_09_2026/final_xor_histogram.png
+Shannon por ventanas             : data/reports/16_13_03_09_2026/final_xor_windowed_shannon.png
+Autocorrelacion                  : data/reports/16_13_03_09_2026/final_xor_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/16_13_03_09_2026/final_xor_byte_counts.csv
+
+============================================================

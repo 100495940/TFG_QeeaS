@@ -20,6 +20,6 @@ qrng_server/
 tmp/
 memoria/
 external/
-captures/
+
 .randlab/
 certs/

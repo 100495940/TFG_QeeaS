@@ -1,0 +1,9 @@
+==================================================
+ REPORTE MATEMATICO DE ENTROPIA (Línea Base TRNG) 
+==================================================
+
+Muestras analizadas : 1048576 bytes (1 MB)
+Entropía de Shannon : 7.999816 bits/byte (Ideal: 8.0)
+Min-Entropía (NIST) : 7.939304 bits/byte
+Test Chi-Cuadrado   : 268.18
+==================================================
