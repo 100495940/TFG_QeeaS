@@ -5,21 +5,20 @@ sdkconfig.olg
 
 # Configuración del editor
 .vscode/
-# .devcontainer/
 
 # Configuración de git
 .git/
 
-# Archivo con las contraseñas y secretos
+# Archivos con las contraseñas, secretos y certificados
 secrets.conf
 secrets_backup.conf
+certs/
 
+# Archivos librerías
 target/
 lib/
 qrng_server/
 tmp/
 memoria/
 external/
-
 .randlab/
-certs/

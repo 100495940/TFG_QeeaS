@@ -18,33 +18,48 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: Autodescubrir del busid de la ESP32
-echo [1/3] Buscando placa ESP32-C6 conectada
-set "BUSID="
+echo [1/3] Buscando placa ESP32 compatible conectada y dispositivo Quantis
+echo %TEMP%
+set "BUSID_ESP32="
+set "BUSID_QUANTIS="
+set "BUSID_FILE=%TEMP%\qeeas_usb_list.txt"
 
-:: Imprimir lista completa de dispositivos detectados
 echo --- Lista de dispositivos detectados por Windows ---
 usbipd list
 usbipd list > temp_usb_list.txt
 echo --------------------------------------------------
 echo.
 
-:: Escanear la lista de USB buscando chips típicos de placas de desarrollo
-for /f "tokens=1" %%A in ('findstr /i "Silicon CP210x CP210 CH340 JTAG UART" temp_usb_list.txt') do (
-    set "BUSID=%%A"
-)
+REM IDs soportados:
+REM CH340     = 1a86:7523
+REM CP210x    = 10c4:ea60
+REM Espressif = 303a:xxxx
 
-:: Borrar archivo temporal
-del temp_usb_list.txt
+powershell -NoProfile -Command "$line = usbipd list | Where-Object { $_ -match '^\s*\d+-\d+\s+(1a86:7523|10c4:ea60|303a:[0-9a-fA-F]{4})\s+' } | Select-Object -First 1; if ($line -match '^\s*(\d+-\d+)') { $Matches[1] }" > "%BUSID_FILE%"
+set /p BUSID_ESP32=<"%BUSID_FILE%"
 
-if not defined BUSID (
-    echo [ERROR] No se ha detectado ninguna placa compatible conectada.
-    echo Asegurate de que la ESP32-C6 esta enchufada por USB en el puerto UART y encendida.
+powershell -NoProfile -Command "$line = usbipd list | Where-Object { $_ -match '^\s*\d+-\d+\s+(0aba:0102)\s+' } | Select-Object -First 1; if ($line -match '^\s*(\d+-\d+)') { $Matches[1] }" > "%BUSID_FILE%"
+set /p BUSID_QUANTIS=<"%BUSID_FILE%"
+
+del "%BUSID_FILE%" >nul 2>nul
+
+if not defined BUSID_ESP32 (
+    echo [ERROR] No se ha detectado ninguna placa ESP32 compatible conectada.
+    echo Asegurate de que la placa esta conectada por USB y encendida.
     pause
     exit /b
 )
 
-echo [INFO] Placa detectada en el puerto USB con BUSID: !BUSID!
+echo [INFO] Placa ESP32 detectada con BUSID: !BUSID_ESP32!
+
+if not defined BUSID_QUANTIS (
+    echo [WARNING] No se ha detectado ning�n QUANTIS compatible conectado.
+    echo Asegurate de que QUANTIS est� conectado por USB.
+)
+
+if defined BUSID_QUANTIS (
+    echo [INFO] QUANTIS detectado con BUSID: !BUSID_QUANTIS!
+)
 
 :: ==========================================
 :: PERMISOS DE RED (FIREWALL) AUTOMATIZADOS
@@ -67,19 +82,39 @@ echo.
 :: Vincular e inyectar el hardware al contenedor
 echo [2/3] Conectando hardware a la maquina virtual de Docker
 
-:: Forzar vinculación previa por si alguna conexión se ha quedado colgada
-usbipd detach --busid !BUSID! >nul 2>nul
+:: Forzar vinculaci�n previa por si alguna conexi�n se ha quedado colgada
+usbipd detach --busid !BUSID_ESP32! >nul 2>nul
 timeout /t 2 >nul
 
+if defined BUSID_QUANTIS (
+    usbipd detach --busid !BUSID_QUANTIS! >nul 2>nul
+    timeout /t 2 >nul
+)
+
 :: Vincular puerto de nuevo
-usbipd bind --busid !BUSID! >nul 2>nul
+usbipd bind --busid !BUSID_ESP32! >nul 2>nul
+
+:: Vincular puerto de nuevo
+if defined BUSID_QUANTIS (
+    usbipd bind --busid !BUSID_QUANTIS! >nul 2>nul
+)
 
 :: Inyectar la placa en WSL 
-usbipd attach --wsl --busid !BUSID!
+usbipd attach --wsl --busid !BUSID_ESP32!
 if %errorlevel% neq 0 (
-    echo [ERROR] Fallo al intentar pasar el USB a Docker. ¿Esta Docker Desktop abierto?
+    echo [ERROR] Fallo al intentar pasar el USB a Docker. �Esta Docker Desktop abierto?
     pause
     exit /b
+)
+
+:: Inyectar la placa en WSL 
+if defined BUSID_QUANTIS (
+usbipd attach --wsl --busid !BUSID_QUANTIS!
+    if %errorlevel% neq 0 (
+        echo [ERROR] Fallo al intentar pasar el USB a Docker. �Esta Docker Desktop abierto?
+        pause
+        exit /b
+    )
 )
 
 :: Abrir el entorno
@@ -90,6 +125,6 @@ echo.
 echo ===================================================
 echo EXITO: El entorno esta listo.
 echo En VS Code, abre una terminal y ejecuta:
-echo bash ejecutar_tfg.sh
+echo bash main/entropy.sh
 echo ===================================================
 pause

@@ -1,4 +1,4 @@
-# Usamr imágen oficial de Zehpyr con SDK y Python
+# Usar imágen oficial de Zehpyr con SDK y Python
 FROM zephyrprojectrtos/zephyr-build:latest
 
 # Usuario root necesario para gestionar permisos de hardware USB/serial
