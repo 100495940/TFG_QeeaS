@@ -1,4 +1,4 @@
-# Indicamos a ZEPHYR qué archivos compilar dentro
+# Indicar a ZEPHYR qué archivos compilar dentro
 # de la carpeta main
 
 # Versión mínima de CMake
