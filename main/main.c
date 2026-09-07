@@ -11,7 +11,7 @@ void main(void) {
 
     // Bucle principal
     //while(1) {
-    //    send_trng_data_ask();
+        //send_trng_data_ask();
     //}
 
     // Iniciar ecosistema Zenoh

@@ -1,0 +1,61 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : trng_data_radio_off
+Archivo                          : data/captures/trng_radio_off/trng_data_radio_off.bin
+Bytes analizados                 : 1048576
+Bloques completos de 32 bytes    : 32768
+Bytes sobrantes                  : 0
+Valores byte unicos              : 256/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.99981553 bits/byte
+Min-entropia empirica            : 7.93930407 bits/byte
+Chi-cuadrado                     : 268.1846
+p-value chi-cuadrado             : 0.27310319
+Byte mas frecuente               : 69
+Frecuencia byte mas frecuente    : 4272
+Probabilidad byte mas frecuente  : 0.00407410
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 8388608
+Ceros                            : 4194821
+Unos                             : 4193787
+Proporcion ceros                 : 0.50006163
+Proporcion unos                  : 0.49993837
+Monobit S_obs                    : 0.35700606
+Monobit p-value                  : 0.72108727
+Runs aplicable                   : True
+Runs count                       : 4195672
+Runs p-value                     : 0.34481487
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : 0.0000573725
+Autocorrelacion bits lag-1       : -0.0003260526
+Bloques totales de 32 bytes      : 32768
+Bloques unicos de 32 bytes       : 32768
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 4
+Ratio compresion zlib            : 1.00031090
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 32
+Shannon ventana minimo           : 7.99341727
+Shannon ventana media            : 7.99440836
+Shannon ventana maximo           : 7.99568730
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/trng_radio_off/trng_data_radio_off_metrics.json
+Histograma                       : data/reports/trng_radio_off/trng_data_radio_off_histogram.png
+Shannon por ventanas             : data/reports/trng_radio_off/trng_data_radio_off_windowed_shannon.png
+Autocorrelacion                  : data/reports/trng_radio_off/trng_data_radio_off_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/trng_radio_off/trng_data_radio_off_byte_counts.csv
+
+============================================================

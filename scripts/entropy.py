@@ -26,11 +26,11 @@ def chiSquareEntropy(byte_array):
 
     return np.sum((counts-expected)**2/expected)
 
-destination_folder = 'data'
+destination_folder = 'data/captures/trng_radio_off'
 if not os.path.exists(destination_folder):
     os.makedirs(destination_folder)
 
-bin_path = os.path.join(destination_folder, 'trng_data_radio_on.bin')
+bin_path = os.path.join(destination_folder, 'trng_data_radio_off.bin')
 png_path = os.path.join(destination_folder, 'grafico_entropia.png')
 report_path = os.path.join(destination_folder, 'reporte_matematico.txt')
 

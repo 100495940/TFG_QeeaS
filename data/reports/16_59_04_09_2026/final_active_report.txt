@@ -1,0 +1,61 @@
+============================================================
+ REPORTE DE ENTROPIA - QEEAS / ESP32-C6
+============================================================
+
+Etiqueta                         : final_active
+Archivo                          : data/captures/16_59_04_09_2026/entropy_final_active.bin
+Bytes analizados                 : 958336
+Bloques completos de 32 bytes    : 29948
+Bytes sobrantes                  : 0
+Valores byte unicos              : 256/256
+
+DISTRIBUCION DE BYTES
+------------------------------------------------------------
+Entropia de Shannon              : 7.99984026 bits/byte
+Min-entropia empirica            : 7.93574400 bits/byte
+Chi-cuadrado                     : 212.2351
+p-value chi-cuadrado             : 0.97622129
+Byte mas frecuente               : 178
+Frecuencia byte mas frecuente    : 3914
+Probabilidad byte mas frecuente  : 0.00408416
+
+BALANCE Y TESTS SOBRE BITS
+------------------------------------------------------------
+Bits analizados                  : 7666688
+Ceros                            : 3832303
+Unos                             : 3834385
+Proporcion ceros                 : 0.49986422
+Proporcion unos                  : 0.50013578
+Monobit S_obs                    : 0.75192899
+Monobit p-value                  : 0.45209376
+Runs aplicable                   : True
+Runs count                       : 3834554
+Runs p-value                     : 0.38200698
+
+DEPENDENCIA Y REPETICIONES
+------------------------------------------------------------
+Autocorrelacion bytes lag-1      : -0.0009313426
+Autocorrelacion bits lag-1       : -0.0003155947
+Bloques totales de 32 bytes      : 29948
+Bloques unicos de 32 bytes       : 29948
+Bloques repetidos de 32 bytes    : 0
+Mayor racha del mismo byte       : 3
+Ratio compresion zlib            : 1.00031409
+
+ESTABILIDAD TEMPORAL
+------------------------------------------------------------
+Tamanho ventana                  : 32768 bytes
+Numero ventanas completas        : 29
+Shannon ventana minimo           : 7.99318821
+Shannon ventana media            : 7.99440494
+Shannon ventana maximo           : 7.99535901
+
+ARCHIVOS GENERADOS
+------------------------------------------------------------
+Metricas JSON                    : data/reports/16_59_04_09_2026/final_active_metrics.json
+Histograma                       : data/reports/16_59_04_09_2026/final_active_histogram.png
+Shannon por ventanas             : data/reports/16_59_04_09_2026/final_active_windowed_shannon.png
+Autocorrelacion                  : data/reports/16_59_04_09_2026/final_active_byte_autocorrelation.png
+Frecuencias por byte CSV         : data/reports/16_59_04_09_2026/final_active_byte_counts.csv
+
+============================================================
