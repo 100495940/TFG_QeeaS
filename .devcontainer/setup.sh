@@ -35,10 +35,6 @@ ESPRESSIF_COMMIT="$(tr -d '[:space:]' < "$ESPRESSIF_COMMIT_FILE")"
 
 echo "Espressif commit requerido: $ESPRESSIF_COMMIT"
 
-echo "Fijando Zephyr..."
-git -C "$ZEPHYR_REPO" fetch --all --tags
-git -C "$ZEPHYR_REPO" checkout --detach "$ZEPHYR_COMMIT"
-
 cd /workspaces
 
 if [ ! -d "zephyrproject" ] ; then
