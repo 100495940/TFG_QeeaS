@@ -26,7 +26,7 @@ ZEPHYR_COMMIT="$(tr -d '[:space:]' < "$ZEPHYR_COMMIT_FILE")"
 
 echo "Zephyr commit requerido: $ZEPHYR_COMMIT"
 
-if [[ ! -f "$ESPRESIF_COMMIT_FILE" ]]; then
+if [[ ! -f "$ESPRESSIF_COMMIT_FILE" ]]; then
     echo "[ERROR] No existe $ESPRESSIF_COMMIT_FILE"
     exit 1
 fi
