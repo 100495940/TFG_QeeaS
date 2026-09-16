@@ -130,67 +130,33 @@ else
     echo "[INFO] Blobs de Espressif ya disponibles."
 fi
 
+ZENOH_PICO_REPO="https://github.com/100495940/zenoh-pico.git"
+ZENOH_PICO_DIR="lib/zenoh-pico"
+ZENOH_PICO_COMMIT="$(tr -d '[:space:]' < "zenoh-pico.commit")"
+
+if [[ -z "$ZENOH_PICO_COMMIT" ]]; then
+    echo "[ERROR] zenoh-pico.commit está vacío."
+    exit 1
+fi
+
+rm -rf "$ZENOH_PICO_DIR"
+
 # Comprobar instalación de Zenoh-Pico
 if [ ! -d "lib/zenoh-pico" ]; then
     echo "[INFO] Zenoh-Pico no detectado en 'lib/'. Clonando repositorio oficial..."
     mkdir -p lib
-    git clone https://github.com/eclipse-zenoh/zenoh-pico.git lib/zenoh-pico
+    git clone "$ZENOH_PICO_REPO" "$ZENOH_PICO_DIR"
+    echo "[INFO] Fijando Zenoh-Pico al fork correspondiente..."
+    git -C "$ZENOH_PICO_DIR" checkout "$ZENOH_PICO_COMMIT"
+    echo "[OK] Zenoh-Pico QeeaS instalado en commit:"
+    git -C "$ZENOH_PICO_DIR" rev-parse HEAD
     echo "[INFO] Zenoh-Pico instalado con éxito."
 else
     echo "[INFO] Zenoh-Pico ya instalado localmente. Saltando descarga."
 fi
 
-echo "[INFO] Fijando Zenoh-Pico a la versión $ZENOH_PICO_VERSION..."
-cd lib/zenoh-pico
-git fetch --tags
-
-if git rev-parse "$ZENOH_PICO_VERSION" >/dev/null 2>&1; then
-    git checkout "$ZENOH_PICO_VERSION"
-elif git rev-parse "v$ZENOH_PICO_VERSION" >/dev/null 2>&1; then
-    git checkout "v$ZENOH_PICO_VERSION"
-else
-    echo "[ERROR] No se encontró tag de Zenoh-Pico para versión $ZENOH_PICO_VERSION"
-    echo "[ERROR] Tags disponibles similares:"
-    git tag -l | grep "$ZENOH_PICO_VERSION" || true
-    exit 1
-fi
-
 cd /workspaces/TFG_QeeaS
 echo "[INFO] Zenoh-Pico fijado correctamente."
-
-echo "[INFO] Aplicando parche de compatibilidad Zenoh-Pico / Zephyr..."
-
-python3 - <<'PY'
-from pathlib import Path
-
-ZENOH_PICO_DIR = Path("/workspaces/TFG_QeeaS/lib/zenoh-pico")
-
-replacement = """#if __has_include(<zephyr/version.h>)
-#include <zephyr/version.h>
-#else
-#include <version.h>
-#endif"""
-
-patched_files = []
-
-for path in ZENOH_PICO_DIR.rglob("*"):
-    if path.suffix not in [".c", ".h"]:
-        continue
-
-    text = path.read_text(errors="ignore")
-
-    if "#include <version.h>" in text:
-        text = text.replace("#include <version.h>", replacement)
-        path.write_text(text)
-        patched_files.append(str(path))
-
-if patched_files:
-    print("[OK] Archivos parcheados:")
-    for file in patched_files:
-        print(" -", file)
-else:
-    print("[INFO] No había includes <version.h> pendientes de parchear.")
-PY
 
 echo "[2/6] Limpiando caché antigua y compilando el firmware"
 
